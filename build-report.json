@@ -1,0 +1,209 @@
+[
+ {
+  "path": "/flower-beds/",
+  "kind": "tool",
+  "words": 1356,
+  "title": "Flower Beds – a Free Queens-Style Puzzle Every Day",
+  "noindex": false,
+  "ads": true,
+  "minWords": 800
+ },
+ {
+  "path": "/tents-and-trees/",
+  "kind": "tool",
+  "words": 1108,
+  "title": "Tents and Trees Puzzle – Play Online Free, Daily",
+  "noindex": false,
+  "ads": true,
+  "minWords": 800
+ },
+ {
+  "path": "/sun-and-shade/",
+  "kind": "tool",
+  "words": 967,
+  "title": "Sun & Shade: a Binary Puzzle (Takuzu) for Your Phone",
+  "noindex": false,
+  "ads": true,
+  "minWords": 800
+ },
+ {
+  "path": "/garden-path/",
+  "kind": "tool",
+  "words": 982,
+  "title": "Garden Path: Draw One Line Through Every Square",
+  "noindex": false,
+  "ads": true,
+  "minWords": 800
+ },
+ {
+  "path": "/who-planted-what/",
+  "kind": "tool",
+  "words": 964,
+  "title": "Who Planted What: Free Beginner Logic Grid Puzzles",
+  "noindex": false,
+  "ads": true,
+  "minWords": 800
+ },
+ {
+  "path": "/archive/",
+  "kind": "tool",
+  "words": 824,
+  "title": "Puzzle Archive: Every Daily Logic Garden by Date",
+  "noindex": false,
+  "ads": true,
+  "minWords": 800
+ },
+ {
+  "path": "/printable/",
+  "kind": "tool",
+  "words": 820,
+  "title": "Printable Logic Puzzles: Free Weekly Garden Packs",
+  "noindex": false,
+  "ads": true,
+  "minWords": 800
+ },
+ {
+  "path": "/guides/queens-style-puzzle-rules/",
+  "kind": "guide",
+  "words": 1043,
+  "title": "How to Play Queens-Style Puzzles: Rules in One Minute",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/star-battle-strategy/",
+  "kind": "guide",
+  "words": 1037,
+  "title": "Star Battle Strategy: 7 Techniques From Easy to Expert",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/three-beds-three-rows/",
+  "kind": "guide",
+  "words": 922,
+  "title": "The \"Three Beds, Three Rows\" Trick Explained",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/tents-and-trees-rules-strategy/",
+  "kind": "guide",
+  "words": 912,
+  "title": "Tents and Trees Rules and Solving Strategy",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/binary-puzzle-rules/",
+  "kind": "guide",
+  "words": 910,
+  "title": "Binary Puzzle Rules: No Three in a Row, Equal Counts",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/solve-logic-grid-puzzles/",
+  "kind": "guide",
+  "words": 935,
+  "title": "How to Solve Logic Grid Puzzles Without Guessing",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/fair-logic-puzzles-unique-solutions/",
+  "kind": "guide",
+  "words": 962,
+  "title": "What Makes a Logic Puzzle Fair? Unique Solutions Explained",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/logic-puzzles-for-beginners/",
+  "kind": "guide",
+  "words": 942,
+  "title": "Logic Puzzles for Beginners: Where to Start",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/guides/logic-puzzles-for-seniors/",
+  "kind": "guide",
+  "words": 935,
+  "title": "Logic Puzzles for Seniors: Large Grids, Calm Pace",
+  "noindex": false,
+  "ads": true,
+  "minWords": 900
+ },
+ {
+  "path": "/",
+  "kind": "home",
+  "words": 481,
+  "title": "Daily Logic Garden – Today’s Five Logic Puzzles",
+  "noindex": false,
+  "ads": false,
+  "minWords": 450
+ },
+ {
+  "path": "/guides/",
+  "kind": "hub",
+  "words": 629,
+  "title": "Logic Puzzle Guides – Rules, Strategy and Techniques",
+  "noindex": false,
+  "ads": false,
+  "minWords": 220
+ },
+ {
+  "path": "/garden/",
+  "kind": "garden",
+  "words": 108,
+  "title": "My Garden – Your Solved Puzzles at Daily Logic Garden",
+  "noindex": true,
+  "ads": false,
+  "minWords": 0
+ },
+ {
+  "path": "/about/",
+  "kind": "about",
+  "words": 517,
+  "title": "About Daily Logic Garden – Method, Publisher and Limits",
+  "noindex": false,
+  "ads": false,
+  "minWords": 500
+ },
+ {
+  "path": "/contact/",
+  "kind": "legal",
+  "words": 222,
+  "title": "Contact Daily Logic Garden – Corrections and Questions",
+  "noindex": false,
+  "ads": false,
+  "minWords": 220
+ },
+ {
+  "path": "/imprint/",
+  "kind": "legal",
+  "words": 130,
+  "title": "Imprint – Daily Logic Garden (Legal Notice, AdStern)",
+  "noindex": false,
+  "ads": false,
+  "minWords": 100
+ },
+ {
+  "path": "/privacy/",
+  "kind": "legal",
+  "words": 978,
+  "title": "Privacy Policy – Daily Logic Garden (Ads, Consent, Data)",
+  "noindex": false,
+  "ads": false,
+  "minWords": 600
+ }
+]

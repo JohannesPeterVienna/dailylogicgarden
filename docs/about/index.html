@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en-US" data-ads="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About Daily Logic Garden – Method, Publisher and Limits</title>
+<meta name="description" content="Who publishes Daily Logic Garden, how puzzles are generated and checked for one solution, how levels and hints work, how content is reviewed, and limits.">
+<link rel="canonical" href="https://dailylogicgarden.com/about/">
+
+
+<meta name="google-adsense-account" content="ca-pub-7811071715414905">
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});gtag('set','ads_data_redaction',true);gtag('set','url_passthrough',false);window['ga-disable-G-T00HRG2YVF']=true;</script>
+
+<meta name="theme-color" content="#23412F">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/site.css?v=20261102">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Daily Logic Garden">
+<meta property="og:title" content="About Daily Logic Garden – Method, Publisher and Limits">
+<meta property="og:description" content="Who publishes Daily Logic Garden, how puzzles are generated and checked for one solution, how levels and hints work, how content is reviewed, and limits.">
+<meta property="og:url" content="https://dailylogicgarden.com/about/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dailylogicgarden.com/"},{"@type":"ListItem","position":2,"name":"About","item":"https://dailylogicgarden.com/about/"}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="brand" href="/"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#23412F"/><path d="M20 31V17" stroke="#F1F4EC" stroke-width="2.4" stroke-linecap="round"/><path d="M20 22c-6 0-9-4-9-9 6 0 9 4 9 9zM20 19c0-6 4-9 9-9 0 6-4 9-9 9z" fill="#E3B23C"/><path d="M11 31h18" stroke="#F1F4EC" stroke-width="2" stroke-linecap="round"/></svg><span>Daily Logic Garden</span></a><nav class="main" aria-label="Main"><a href="/">Today</a><a href="/flower-beds/">Flower Beds</a><a href="/tents-and-trees/">Tents & Trees</a><a href="/sun-and-shade/">Sun & Shade</a><a href="/garden-path/">Garden Path</a><a href="/who-planted-what/">Who Planted What</a><a href="/guides/">Guides</a><a href="/archive/">Archive</a><a href="/garden/">My garden</a></nav></div></header>
+<main id="main"><div class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><span aria-current="page">About</span></li></ol></nav><article class="prose"><span class="kicker">About &amp; method</span><h1>About Daily Logic Garden</h1><p class="lede">Daily Logic Garden publishes five daily logic puzzles with three levels each, plus guides on rules and solving technique. It is free, needs no account, and keeps your progress on your own device.</p>
+<h2 id="who">Who publishes the site</h2>
+<p>The site is published by AdStern, an advertising agency in Vienna, Austria (details in the <a href="/imprint/">imprint</a>). It is financed by advertising on puzzle and guide pages. No game publisher pays for mentions, and the guides contain no affiliate links. The site was rebuilt from scratch in November 2026; the previous version offered a small set of rotating nonogram boards, which are no longer published here.</p>
+<h2 id="generator">How the puzzles are made</h2>
+<p>Each board is generated in your browser. The date in UTC, the puzzle type and the level form a seed for a deterministic random generator, so every device produces the same board on the same day. The generator proposes a layout – flower beds grown around a hidden solution, trees beside hidden tents, a full sun-and-shade grid, a random path through every square, a random assignment of gardeners – and then removes information (givens, stones, clues) as long as the puzzle stays solvable at its level.</p>
+<h2 id="checks">How every board is checked</h2>
+<ul><li><b>Exactly one solution.</b> An exhaustive search, written separately from the logic solver, must find exactly one solution. (For 10 × 10 Sun &amp; Shade boards the browser uses a faster exhaustive search with line propagation; the automated tests additionally run the plain row-by-row search.)</li>
+<li><b>No guessing.</b> A solver that only uses a fixed list of human techniques must finish the board.</li>
+<li><b>Honest level.</b> The solver must need its level&rsquo;s technique, and must fail with the techniques of the level below.</li></ul>
+<p>Automated tests run these checks for 60 consecutive days for every puzzle and level, and they verify that following only the hints solves the board and that every hint agrees with the solution. The technique lists are described in the guides, for example <a href="/guides/star-battle-strategy/">Star Battle strategy</a>.</p>
+<h2 id="content">How the guides are written and checked</h2>
+<p>Guides are written for this site. Numbers about our puzzles (board sizes, average steps, how often a technique was needed) come from running our generator on the 60 daily seeds from November 2 to December 31, 2026. Mathematical counts, such as the 34 valid rows of eight in a binary puzzle, were computed by our own code. Example boards in the figures are produced by the real generator when the site is built. Each page shows its review date; it changes when a page is checked again or corrected.</p>
+<h2 id="limits">Limits</h2>
+<p>The difficulty levels reflect our solver&rsquo;s technique order; a human may find another route. The daily switch depends on your device clock. Progress stored in the browser is lost if you clear site data, unless you exported it. We describe genres by their common names only so people can find the rules; we are not affiliated with any other puzzle publisher or game.</p>
+<h2 id="privacy">Your data</h2>
+<p>Puzzle progress and your garden stay in your browser&rsquo;s local storage. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p><p class="reviewed">Last updated: November 2, 2026</p></article>
+</div></main>
+<footer class="site"><div class="wrap"><div class="cols">
+<div><h2>Play</h2><ul><li><a href="/flower-beds/">Flower Beds</a></li><li><a href="/tents-and-trees/">Tents &amp; Trees</a></li><li><a href="/sun-and-shade/">Sun &amp; Shade</a></li><li><a href="/garden-path/">Garden Path</a></li><li><a href="/who-planted-what/">Who Planted What</a></li></ul></div>
+<div><h2>More</h2><ul><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
+<div><h2>About</h2><ul><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy policy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
+</div><p class="fine">Daily Logic Garden is published by AdStern, Vienna. Every puzzle is made by our own generator and checked for exactly one solution. Your progress stays in your browser.</p></div></footer>
+<script src="/assets/js/consent.js?v=20261102" defer></script>
+<script src="/assets/js/site.js?v=20261102" defer></script>
+
+</body>
+</html>

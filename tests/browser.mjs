@@ -26,7 +26,7 @@ const BASE = 'http://127.0.0.1:' + server.address().port;
 const urls = [...readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<loc>https:\/\/dailylogicgarden\.com([^<]+)<\/loc>/g)].map((m) => m[1]).concat(['/garden/']);
 
 const browser = await chromium.launch();
-let fails = 0, minAd = Infinity, minAdWhere = '';
+let fails = 0, minAd = Infinity, minAdWhere = '', printPages = 0, lgFit = null;
 const fail = (m) => { fails++; console.error('FAIL', m); };
 
 async function solveWithHints(page, label) {
@@ -66,12 +66,48 @@ for (const width of [390, 1366]) {
         if (!(await page.locator('.hintbox:not([hidden])').count())) fail('grove hint ' + u);
       }
     }
-    if (u === '/archive/' && (await page.locator('.arch .day').count()) !== 30) fail('archive days');
+    const sinceLaunch = Math.round((Date.parse(new Date().toISOString().slice(0, 10)) - Date.parse('2026-11-02')) / 86400000) + 1;
+    const expectDays = Math.min(30, sinceLaunch);
+    if (u === '/archive/' && (await page.locator('.arch .day').count()) !== expectDays) fail('archive days');
     if (u === '/printable/' && width === 390) {
       await page.click('form[data-printable] button[type=submit]');
       await page.waitForFunction(() => window.__printed > 0, null, { timeout: 60000 });
       const sheets = await page.locator('.print-root .print-sheet').count();
-      if (sheets !== 21) fail('printable sheets ' + sheets);
+      if (sheets !== Math.min(7, expectDays) * 3) fail('printable sheets ' + sheets);
+      // print view: every sheet visible with height, article hidden, PDF has one page per sheet
+      await page.emulateMedia({ media: 'print' });
+      const pr = await page.evaluate(() => ({
+        heights: [...document.querySelectorAll('.print-root .print-sheet')].map((e) => e.getBoundingClientRect().height),
+        articleShown: getComputedStyle(document.querySelector('main .wrap > article')).display !== 'none'
+      }));
+      if (!pr.heights.length || pr.heights.some((h) => h < 100) || pr.articleShown) fail('print view of pack ' + JSON.stringify(pr));
+      const pdf = await page.pdf({ format: 'Letter' });
+      const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+      if (pages < sheets || pages < 2 && sheets > 1) fail('pdf pages ' + pages + ' for ' + sheets + ' sheets');
+      printPages = pages;
+      await page.emulateMedia({ media: 'screen' });
+    }
+    if (game && width === 390) {
+      // single puzzle print view
+      await page.emulateMedia({ media: 'print' });
+      const h = await page.evaluate(() => [...document.querySelectorAll('.print-root .print-sheet')].map((e) => e.getBoundingClientRect().height));
+      if (h.length !== 1 || h[0] < 100) fail('print sheet of ' + u + ' ' + JSON.stringify(h));
+      const pdf = await page.pdf({ format: 'Letter' });
+      if (pdf.length < 3000) fail('pdf of ' + u + ' looks empty');
+      await page.emulateMedia({ media: 'screen' });
+    }
+    if (u === '/who-planted-what/' && width === 390) {
+      // clues and the active grid fit on a 390 x 800 screen together
+      await page.setViewportSize({ width: 390, height: 800 });
+      const fit = await page.evaluate(() => {
+        const grid = document.querySelector('.lg.active');
+        grid.scrollIntoView({ block: 'end' });
+        const g = grid.getBoundingClientRect(), c = document.querySelector('.lg-cluebox').getBoundingClientRect();
+        return { gTop: g.top, gBottom: g.bottom, cTop: c.top, cBottom: c.bottom, vh: innerHeight, gameH: document.querySelector('[data-game]').getBoundingClientRect().height };
+      });
+      if (!(fit.cTop >= 0 && fit.cBottom <= fit.gTop + 1 && fit.gBottom <= fit.vh && fit.cBottom - fit.cTop > 80)) fail('who-planted-what clues + grid do not fit ' + JSON.stringify(fit));
+      lgFit = fit;
+      await page.setViewportSize({ width: 390, height: 900 });
     }
     if ((u === '/' || u === '/garden/') && !(await page.locator('[data-garden] svg').count())) fail('garden svg ' + u);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -108,5 +144,6 @@ for (const width of [390, 1366]) {
 }
 await browser.close();
 server.close();
+console.log(`print pack PDF pages: ${printPages}; logic grid on 390x800: ${JSON.stringify(lgFit)}`);
 console.log(`browser: ${urls.length} pages x 2 widths, ${fails} failures; min ad distance ${Math.round(minAd)}px (${minAdWhere}); screenshots in ${SHOTS}`);
 if (fails) process.exit(1);

@@ -15,6 +15,7 @@
   };
   var TYPES = ['flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted'];
   var ARCHIVE_DAYS = 30;
+  var LAUNCH = '2026-11-02'; // the archive never reaches back before the launch day
 
   // ---------- storage (safe when blocked) ----------
   var store = {
@@ -41,7 +42,7 @@
   function validDate(key) {
     if (!core.parseKey(key)) return null;
     var t = today();
-    return key <= t && key >= core.addDays(t, -(ARCHIVE_DAYS - 1)) ? key : null;
+    return key <= t && key >= core.addDays(t, -(ARCHIVE_DAYS - 1)) && key >= LAUNCH ? key : null;
   }
   function longDate(key) {
     var d = core.parseKey(key);
@@ -260,6 +261,7 @@
   };
   G.renderPrint = function () {
     if (!this.printRoot) return;
+    document.body.classList.add('has-print');
     this.printRoot.innerHTML = draw.printSheet(this.p, D, META[this.type].name + ' – ' + core.LEVEL_NAMES[this.level] + ' – ' + longDate(this.key));
   };
 
@@ -383,7 +385,7 @@
     update: function () {
       var p = this.p, n = p.n, u = this.user, mod = this.mod;
       var blocked = {}, bad = {};
-      if (this.prefs.dots) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
+      if (this.prefs.dots && !this.done) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
       mod.conflicts(p, u).forEach(function (x) { bad[x] = 1; });
       var hl = this.markHints();
       this.cellEls.forEach(function (cell, k) {
@@ -422,7 +424,7 @@
     },
     update: function () {
       var p = this.p, n = p.n, u = this.user, mod = this.mod, blocked = {}, bad = {};
-      if (this.prefs.dots) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
+      if (this.prefs.dots && !this.done) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
       mod.conflicts(p, u).forEach(function (x) { bad[x] = 1; });
       var hl = this.markHints();
       this.cellEls.forEach(function (cell, k) {
@@ -619,13 +621,27 @@
       var cl = el('ol', { 'class': 'lg-clues', 'aria-label': 'Clues' });
       p.clueTexts.forEach(function (t) { cl.appendChild(el('li', {}, t.replace(/&/g, '&amp;').replace(/</g, '&lt;'))); });
       this.stage.appendChild(el('p', { 'class': 'howto', style: 'margin-top:0' }, 'Each gardener planted one crop' + (p.cats.length > 3 ? ', in one bed, on one day' : ' in one bed') + '. Bed 1 is nearest the gate.'));
-      this.stage.appendChild(cl);
+      var cbox = el('details', { 'class': 'lg-cluebox', open: '' });
+      cbox.appendChild(el('summary', {}, 'Clues (' + p.clueTexts.length + ')'));
+      cbox.appendChild(cl);
+      this.stage.appendChild(cbox);
       this.clueEls = cl.children;
+      // on narrow screens one grid is shown at a time, chosen with these tabs; the clues stay pinned above
+      var tabs = el('div', { 'class': 'lg-tabs', role: 'group', 'aria-label': 'Choose a grid' });
+      this.stage.appendChild(tabs);
       var wrap = el('div', { 'class': 'lg-grids' });
+      self.showGrid = function (q) {
+        Array.prototype.forEach.call(wrap.children, function (b, i) { b.classList.toggle('active', i === q); });
+        Array.prototype.forEach.call(tabs.children, function (b, i) { b.setAttribute('aria-pressed', String(i === q)); });
+        self.activeGrid = q;
+      };
       this.cellEls = [];
       g.pairs.forEach(function (pr, q) {
         var a = pr[0], b = pr[1];
         var box = el('div', { 'class': 'lg', role: 'grid', 'aria-label': CAT[p.cats[a]] + ' and ' + CAT[p.cats[b]] });
+        var tb = el('button', { type: 'button', 'aria-pressed': 'false' }, CAT[p.cats[a]] + ' \u00d7 ' + CAT[p.cats[b]]);
+        tb.addEventListener('click', function () { self.showGrid(q); });
+        tabs.appendChild(tb);
         box.appendChild(el('div', { 'class': 'cap' }, CAT[p.cats[a]] + ' × ' + CAT[p.cats[b]]));
         box.appendChild(el('div', {}));
         for (var j = 0; j < m; j++) box.appendChild(el('div', { 'class': 'ch', 'aria-hidden': 'true' }, mod.label(p, b, j)));
@@ -641,6 +657,7 @@
         wrap.appendChild(box);
       });
       this.stage.appendChild(wrap);
+      self.showGrid(0);
       this.stage.appendChild(el('p', { 'class': 'howto' }, 'Tap a square once for ✕ (no), twice for ● (yes), a third time to clear. Keyboard: arrows move inside a grid, <kbd>Tab</kbd> jumps to the next grid, <kbd>Y</kbd> yes, <kbd>N</kbd> no, <kbd>Backspace</kbd> clear.'));
       function cycle(k) {
         var v = [2, 1, 0][self.user[k]];
@@ -677,6 +694,10 @@
         c.className = 'cell' + (v === 1 ? ' yes' : v === 2 ? ' no' : '') + (hl.focus[k] ? ' hl-focus' : '') + (hl.target[k] ? ' hl-target' : '');
         c.setAttribute('aria-label', mod.label(p, ci.a, ci.i) + ' and ' + mod.label(p, ci.b, ci.j) + ': ' + (v === 1 ? 'yes' : v === 2 ? 'no' : 'open'));
       });
+      if (hl && this.hint && this.hint.cells && this.hint.cells.length && this.showGrid) {
+        var q0 = Math.floor(this.hint.cells[0] / (g.m * g.m));
+        if (q0 !== this.activeGrid) this.showGrid(q0);
+      }
       var cited = {};
       if (this.hint && /^Clue (\d+)/.test(this.hint.text || '')) cited[+/^Clue (\d+)/.exec(this.hint.text)[1] - 1] = 1;
       Array.prototype.forEach.call(this.clueEls, function (li, i) { li.className = cited[i] ? 'hl' : ''; });
@@ -741,6 +762,7 @@
     var done = solvedSet(), t = today(), html = '';
     for (var i = 0; i < ARCHIVE_DAYS; i++) {
       var key = core.addDays(t, -i);
+      if (key < LAUNCH) break;
       html += '<section class="day"><h3>' + (i === 0 ? 'Today – ' : '') + longDate(key) + '</h3><ul>';
       TYPES.forEach(function (ty) {
         html += '<li>' + META[ty].name + '<span>' + core.LEVELS.map(function (l) {
@@ -754,36 +776,45 @@
     var total = 0;
     garden().plants.forEach(function (p) { if (p.key >= core.addDays(t, -(ARCHIVE_DAYS - 1))) total++; });
     var sum = document.querySelector('[data-archive-sum]');
-    if (sum) sum.textContent = 'You have solved ' + total + ' of the ' + ARCHIVE_DAYS * 15 + ' puzzles in the last ' + ARCHIVE_DAYS + ' days on this device.';
+    var shown = box.querySelectorAll('.day').length;
+    if (sum) sum.textContent = 'You have solved ' + total + ' of the ' + shown * 15 + ' puzzles listed here on this device.' + (shown < ARCHIVE_DAYS ? ' The archive starts on the launch day, November 2, 2026, and grows to 30 days.' : '');
   }
   function bindPrintable(form) {
     var start = form.querySelector('[name=start]'), out = form.querySelector('[data-pack-msg]');
     var t = today(), min = core.addDays(t, -(ARCHIVE_DAYS - 1));
-    start.min = min; start.max = t; start.value = core.addDays(t, -6);
+    if (min < LAUNCH) min = LAUNCH;
+    start.min = min; start.max = t; start.value = core.addDays(t, -6) < min ? min : core.addDays(t, -6);
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
-      var from = validDate(start.value) || core.addDays(t, -6);
+      var from = validDate(start.value) || min;
       var level = form.querySelector('[name=level]').value;
       var types = TYPES.filter(function (ty) { var b = form.querySelector('[name=t-' + ty + ']'); return b && b.checked; });
       if (!types.length) { out.textContent = 'Pick at least one puzzle type.'; return; }
-      var root = document.querySelector('.print-root'), html = '', days = 0, keys = [];
+      var root = document.querySelector('.print-root'), html = '', keys = [];
       for (var i = 0; i < 7; i++) { var key = core.addDays(from, i); if (key > t) break; keys.push(key); }
-      out.textContent = 'Growing ' + keys.length * types.length + ' puzzles…';
-      setTimeout(function () {
-        keys.forEach(function (key) {
-          types.forEach(function (ty) {
-            var p = D[ty].generate(key, level);
-            html += draw.printSheet(p, D, META[ty].name + ' – ' + core.LEVEL_NAMES[level] + ' – ' + longDate(key));
-          });
-          days++;
-        });
+      var jobs = [];
+      keys.forEach(function (key) { types.forEach(function (ty) { jobs.push([key, ty]); }); });
+      out.textContent = 'Growing ' + jobs.length + ' puzzles…';
+      var btn = form.querySelector('button[type=submit]');
+      btn.disabled = true;
+      (function next(i) {
+        // one board per tick, so the page stays responsive while the pack grows
+        if (i < jobs.length) {
+          var p = D[jobs[i][1]].generate(jobs[i][0], level);
+          html += draw.printSheet(p, D, META[jobs[i][1]].name + ' – ' + core.LEVEL_NAMES[level] + ' – ' + longDate(jobs[i][0]));
+          out.textContent = 'Growing puzzle ' + (i + 1) + ' of ' + jobs.length + '…';
+          setTimeout(function () { next(i + 1); }, 0);
+          return;
+        }
         root.innerHTML = html;
+        document.body.classList.add('has-print');
         var prev = document.querySelector('[data-pack-preview]');
-        if (prev) prev.innerHTML = '<p>Ready: ' + core.plural(keys.length * types.length, 'puzzle') + ' from ' + longDate(keys[0]) + ' to ' + longDate(keys[keys.length - 1]) + ', one per page. The pack opens in your browser’s print dialog; choose “Save as PDF” there to keep a file.</p>';
-        out.textContent = 'Pack ready – ' + core.plural(keys.length * types.length, 'page') + '.';
-        form.setAttribute('data-ready', String(keys.length * types.length));
+        if (prev) prev.innerHTML = '<p>Ready: ' + core.plural(jobs.length, 'puzzle') + ' from ' + longDate(keys[0]) + ' to ' + longDate(keys[keys.length - 1]) + ', one per page. The pack opens in your browser’s print dialog; choose “Save as PDF” there to keep a file.</p>';
+        out.textContent = 'Pack ready – ' + core.plural(jobs.length, 'page') + '.';
+        form.setAttribute('data-ready', String(jobs.length));
+        btn.disabled = false;
         window.print();
-      }, 30);
+      })(0);
     });
   }
 

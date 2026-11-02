@@ -9,7 +9,7 @@ const gp = require('../js/gardenpath.js');
 const ss = require('../js/sunshade.js');
 
 const C = 44;
-const BED = ['var(--bed0)', 'var(--bed1)', 'var(--bed2)', 'var(--bed3)', 'var(--bed4)', 'var(--bed5)'];
+const BED = ['var(--bed0)', 'var(--bed1)', 'var(--bed2)', 'var(--bed3)', 'var(--bed4)', 'var(--bed5)', 'var(--bed6)', 'var(--bed7)'];
 const T = (x, y, s, extra = '') => `<text x="${x}" y="${y}" font-size="13" fill="var(--muted)" text-anchor="middle" ${extra}>${s}</text>`;
 const flower = (cx, cy, r = 12) => `<g>${[0, 72, 144, 216, 288].map((a) => `<circle cx="${(cx + Math.sin(a * Math.PI / 180) * r * 0.55).toFixed(1)}" cy="${(cy - Math.cos(a * Math.PI / 180) * r * 0.55).toFixed(1)}" r="${(r * 0.36).toFixed(1)}" fill="var(--plum)"/>`).join('')}<circle cx="${cx}" cy="${cy}" r="${(r * 0.3).toFixed(1)}" fill="var(--pollen)"/></g>`;
 const cross = (cx, cy) => `<path d="M${cx - 6} ${cy - 6}l12 12M${cx + 6} ${cy - 6}l-12 12" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>`;

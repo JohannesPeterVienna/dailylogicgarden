@@ -315,9 +315,10 @@
   function generate(key, level, opts) {
     level = level in SIZES ? level : 'sprout';
     var n = SIZES[level], target = TIERS[level], g = geometry(n);
-    var R = core.rng(core.seedFor('sunshade', level, key));
+    var R = core.rngFor('sunshade', level, key);
     var maxAttempts = (opts && opts.maxAttempts) || 200;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      R.mark();
       var sol = randomGrid(n, R), givens = Int8Array.from(sol);
       var order = R.shuffle(Array.from({ length: n * n }, function (_, i) { return i; }));
       for (var i = 0; i < order.length; i++) {

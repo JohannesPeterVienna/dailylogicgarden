@@ -324,9 +324,10 @@
   function generate(key, level, opts) {
     level = level in CFG ? level : 'sprout';
     var cfg = CFG[level], target = TIERS[level];
-    var R = core.rng(core.seedFor('whoplanted', level, key));
+    var R = core.rngFor('whoplanted', level, key);
     var maxAttempts = (opts && opts.maxAttempts) || 300;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      R.mark();
       var p = { type: 'whoplanted', key: key, level: level, m: M, cats: cfg.cats.slice(), items: [], clues: [] };
       p.cats.forEach(function (kind) {
         if (kind === 'who') p.items.push(R.shuffle(NAMES.slice()).slice(0, M).sort());

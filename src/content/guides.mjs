@@ -97,7 +97,7 @@ export const GUIDES = [
       ['Is touch-all a form of guessing?', 'No. It checks a single square against a single region without following any chain of consequences. If the region would be left without options, the square is empty – that is a direct deduction.'],
       ['Do these techniques work for two-star Star Battle?', 'The ideas carry over, but the counting changes: with two stars per region, two regions confined to two rows need four stars from them. The pattern is the same, the numbers double.'],
       ['Why does the solver try techniques in a fixed order?', 'So that hints always show the simplest available step, and so that a board&rsquo;s level reflects the hardest technique it truly needs.'],
-      ['Which technique is most often missed?', 'In our experience, the reverse direction of confinement: a row whose open squares all lie in one region. People spot the region side more readily.'],
+      ['Which technique is most often missed?', 'A likely candidate is the reverse direction of confinement – a row whose open squares all lie in one region – because it asks you to look at a line instead of a shape. If you are stuck, check that direction explicitly.'],
       ['How many steps does a Grove board take?', 'Our solver records 20 logical steps on average for Grove Flower Beds boards, compared with 6 for Sprout.']
     ],
     sources: [STARBATTLE, KRAZY, ABOUT]
@@ -293,7 +293,7 @@ export const GUIDES = [
 <tbody><tr><td>Exactly one solution</td><td>Independent exhaustive search</td><td>Board discarded</td></tr>
 <tr><td>Solvable by logic</td><td>Human-technique solver at the board&rsquo;s level</td><td>Board discarded</td></tr>
 <tr><td>Not easier than its label</td><td>Same solver, one level lower, must fail</td><td>Board discarded</td></tr>
-<tr><td>Hints are correct</td><td>Every hint compared with the solution in automated tests</td><td>Build fails</td></tr></tbody></table></div>`,
+<tr><td>Hints are correct</td><td>Every hint compared with the solution in automated tests</td><td>Release is stopped (automated tests fail)</td></tr></tbody></table></div>`,
       `<h2 id="pipeline">From date to board</h2>
 <figure>${figPipeline()}<figcaption>The daily pipeline in the browser.</figcaption></figure>
 <p>The date (in UTC), puzzle type and level form a seed. The generator proposes a layout, the solver and counter test it, and the first layout that passes is the day&rsquo;s board. Because the seed fixes every random choice, everybody gets the same board without a server.</p>`,

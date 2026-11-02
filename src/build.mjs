@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { TOOLS } from './content/tools.mjs';
 import { GUIDES } from './content/guides.mjs';
 import { EXTRA } from './content/extras.mjs';
+import { prestates } from './precompute.mjs';
 import { home, STATIC, guidesHub, gardenPage, notFound } from './content/static.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -24,8 +25,12 @@ export const words = (h) => strip(h).split(/\s+/).filter((w) => /[A-Za-z0-9]/.te
 function minify(js) {
   return js.split('\n').map((l) => l.replace(/^\s+/, '')).filter((l) => l && !l.startsWith('//') && !l.startsWith('* ') && l !== '*/' && !l.startsWith('/*')).join('\n');
 }
-const ENGINE = ['core', 'flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted', 'draw', 'play']
-  .map((f) => minify(readFileSync(join(ROOT, 'src/js', f + '.js'), 'utf8'))).join('\n');
+const PRE = prestates();
+if (PRE.added) console.log('precomputed ' + PRE.added + ' generator states');
+const ENGINE_PARTS = ['core', 'flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted', 'draw', 'play']
+  .map((f) => minify(readFileSync(join(ROOT, 'src/js', f + '.js'), 'utf8')));
+ENGINE_PARTS.splice(1, 0, 'DLG.core.setPre(' + JSON.stringify(PRE.data) + ');');
+const ENGINE = ENGINE_PARTS.join('\n');
 const CONSENT_DEFAULTS = `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});gtag('set','ads_data_redaction',true);gtag('set','url_passthrough',false);window['ga-disable-${GA}']=true;</script>`;
 const ADSENSE = `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}" crossorigin="anonymous"></script>`;
 

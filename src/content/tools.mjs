@@ -264,7 +264,7 @@ export const TOOLS = [
     title: 'Puzzle Archive: Every Daily Logic Garden by Date',
     description: 'Replay the last 30 days of Daily Logic Garden: Flower Beds, Tents & Trees, Sun & Shade, Garden Path and Who Planted What at all three levels, by date.',
     h1: 'Puzzle archive: every daily garden by date',
-    lede: 'Missed a day? Every puzzle from the last 30 days is one tap away – five puzzle types, three levels each. Solved ones are marked in yellow, using the progress stored on this device.',
+    lede: 'Missed a day? Every puzzle from the last 30 days – counted from our launch on November 2, 2026 – is one tap away: five puzzle types, three levels each. Solved ones are marked in yellow, using the progress stored on this device.',
     tool: `<section class="no-print" aria-labelledby="arch-h"><h2 id="arch-h" class="sr-only" style="position:absolute;left:-999px">Last 30 days</h2><p data-archive-sum class="status"></p><div class="arch" data-archive><p>The archive needs JavaScript: the boards are recreated in your browser from their dates.</p></div><p class="howto">S = Sprout, B = Bloom, G = Grove.</p></section>`,
     sections: [
       `<h2 id="how">How the archive works</h2>
@@ -333,7 +333,7 @@ export const TOOLS = [
       `<h2 id="who">Who printable puzzles are good for</h2>
 <p>Paper puzzles have advantages that a screen can&rsquo;t match. There is no device to charge, nothing beeps, and you can annotate freely: small dots in Flower Beds for squares you&rsquo;re unsure about, pencil arrows in Garden Path, notes in the margins of a logic grid. Many people simply find it more relaxing to solve with a pencil.</p>
 <ul><li><b>Families and classrooms.</b> Sprout boards are a gentle introduction to deductive reasoning. The rules fit in a few lines, and every step can be explained with &ldquo;because&rdquo;.</li>
-<li><b>Older solvers.</b> The printed boards are larger than most newspaper puzzles. Print at 100% on letter or A4 paper; our <a href="/guides/logic-puzzles-for-seniors/">guide for seniors</a> has more tips on sizes and pace.</li>
+<li><b>Older solvers.</b> The printed boards fill most of the page width, so every square is large. Print at 100% on letter or A4 paper; our <a href="/guides/logic-puzzles-for-seniors/">guide for seniors</a> has more tips on sizes and pace.</li>
 <li><b>Commuters and travelers.</b> A week of puzzles weighs a few sheets of paper and needs no signal.</li></ul>
 <p>If you run a club or a class, you are welcome to print packs for your group. Please keep the footer line with our address on the sheets, so others can find the online versions and the hints.</p>`,
       `<h2 id="tips">Printing tips</h2>

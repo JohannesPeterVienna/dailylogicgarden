@@ -270,9 +270,10 @@
   function generate(key, level, opts) {
     level = level in SIZES ? level : 'sprout';
     var n = SIZES[level], target = TIERS[level];
-    var R = core.rng(core.seedFor('tents', level, key));
+    var R = core.rngFor('tents', level, key);
     var maxAttempts = (opts && opts.maxAttempts) || 4000;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      R.mark();
       var L = layout(n, R), g = geometry(n, L.trees, L.rowCount, L.colCount);
       var res = solveLogic(g, initial(g), target);
       if (!res.solved || res.maxTier !== target) continue;

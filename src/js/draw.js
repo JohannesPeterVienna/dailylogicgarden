@@ -139,7 +139,7 @@
 
   // ---------- the growing garden ----------
   var KIND = { flowerbeds: 'daisy', tents: 'fir', sunshade: 'sunflower', gardenpath: 'fern', whoplanted: 'tulip' };
-  var SCALE = { sprout: 0.6, bloom: 0.82, grove: 1.05 };
+  var SCALE = { sprout: 0.62, bloom: 0.9, grove: 1.3 };
   function plantSVG(kind, x, y, sc) {
     var t = 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') scale(' + sc.toFixed(2) + ')';
     if (kind === 'daisy') return '<g transform="' + t + '"><path d="M0 0V-34" stroke="#3f7a4a" stroke-width="2.4"/><path d="M0-14q-9-4-12 2q8 3 12-2" fill="#5f9a5e"/><g fill="#fff" stroke="#7B3F69" stroke-width=".8">' + [0, 60, 120, 180, 240, 300].map(function (a) { return '<ellipse cx="0" cy="-44" rx="3.6" ry="8" transform="rotate(' + a + ' 0 -36)"/>'; }).join('') + '</g><circle cx="0" cy="-36" r="4.2" fill="#E3B23C"/></g>';
@@ -151,16 +151,18 @@
   function season(month) { return month < 2 || month === 11 ? 'winter' : month < 5 ? 'spring' : month < 8 ? 'summer' : 'autumn'; }
   var SKY = { spring: ['#EAF3E2', '#CFE3BE'], summer: ['#F4F0D8', '#D7E6B5'], autumn: ['#F5E8D6', '#E2CFA3'], winter: ['#E9EEF2', '#D3DCE2'] };
   function gardenSVG(plants, month, title) {
-    var W = 720, rows = Math.max(1, Math.ceil(plants.length / 18)), H = 150 + rows * 70;
+    var W = 720, rows = Math.max(1, Math.ceil(plants.length / 18)), H = 170 + rows * 80;
     var sn = season(month), sky = SKY[sn];
     var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-labelledby="garden-t"><title id="garden-t">' + esc(title) + '</title>' +
-      '<rect width="' + W + '" height="' + H + '" fill="' + sky[0] + '"/><rect y="' + (H - rows * 70 - 40) + '" width="' + W + '" height="' + (rows * 70 + 40) + '" fill="' + sky[1] + '"/>';
-    for (var r = 0; r < rows; r++) s += '<path d="M20 ' + (H - r * 70 - 26) + 'H' + (W - 20) + '" stroke="#8a6a44" stroke-width="5" stroke-linecap="round" opacity=".55"/>';
+      '<rect width="' + W + '" height="' + H + '" fill="' + sky[0] + '"/><rect y="' + (H - rows * 80 - 40) + '" width="' + W + '" height="' + (rows * 80 + 40) + '" fill="' + sky[1] + '"/>';
+    for (var r = 0; r < rows; r++) s += '<path d="M20 ' + (H - r * 80 - 26) + 'H' + (W - 20) + '" stroke="#8a6a44" stroke-width="5" stroke-linecap="round" opacity=".55"/>';
     if (sn === 'winter') for (var i = 0; i < 40; i++) s += '<circle cx="' + ((i * 97) % W) + '" cy="' + ((i * 53) % (H - 60)) + '" r="2" fill="#fff" opacity=".8"/>';
     if (sn === 'autumn') for (i = 0; i < 16; i++) s += '<ellipse cx="' + ((i * 131) % W) + '" cy="' + (30 + (i * 37) % 60) + '" rx="4" ry="2" fill="#c27a2c" opacity=".6" transform="rotate(' + (i * 40) + ' ' + ((i * 131) % W) + ' ' + (30 + (i * 37) % 60) + ')"/>';
     plants.forEach(function (pl, idx) {
-      var row = Math.floor(idx / 18), col = idx % 18;
-      var x = 40 + col * 37 + (row % 2 ? 18 : 0), y = H - row * 70 - 28;
+      // plants spread across the whole bed: a row of k plants uses the full width
+      var row = Math.floor(idx / 18), col = idx % 18, inRow = Math.min(18, plants.length - row * 18);
+      var step = (W - 80) / inRow;
+      var x = 40 + step * (col + 0.5) + (row % 2 ? step / 4 : 0), y = H - row * 80 - 28;
       s += plantSVG(KIND[pl.type] || 'tulip', x, y, SCALE[pl.level] || 0.7);
     });
     if (!plants.length) s += '<text x="' + W / 2 + '" y="' + (H / 2) + '" text-anchor="middle" font-size="18" fill="#4B5D50">Your garden is ready for its first plant.</text>';

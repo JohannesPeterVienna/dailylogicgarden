@@ -309,9 +309,10 @@
   function generate(key, level, opts) {
     level = level in SIZES ? level : 'sprout';
     var n = SIZES[level], target = TIERS[level], N = n * n;
-    var R = core.rng(core.seedFor('gardenpath', level, key));
+    var R = core.rngFor('gardenpath', level, key);
     var maxAttempts = (opts && opts.maxAttempts) || 400;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      R.mark();
       var path = randomPath(n, R);
       var idxs = [0, N - 1], guard = 0, hedges = [];
       if (HEDGES[level]) {

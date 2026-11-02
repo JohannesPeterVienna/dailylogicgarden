@@ -37,6 +37,8 @@
     }
     return {
       next: next,
+      state: function () { return a; },
+      mark: function () { api.lastStart = a; },
       int: function (n) { return Math.floor(next() * n); },
       pick: function (arr) { return arr[Math.floor(next() * arr.length)]; },
       shuffle: function (arr) {
@@ -66,6 +68,19 @@
     return dateKey(d);
   }
   function seedFor(type, level, key) { return VERSION + '|' + type + '|' + level + '|' + key; }
+  // Precomputed generator states (made at build time for the slowest boards): the generator jumps
+  // straight to the attempt that succeeds. It still runs every check (logic solve, uniqueness count).
+  // table: { start: 'YYYY-MM-DD', states: { 'type|level': [state for start, start + 1 day, ...] } }
+  var PRE = null;
+  function setPre(table) { PRE = table || null; }
+  function rngFor(type, level, key) {
+    var hit;
+    if (PRE && PRE.states[type + '|' + level] && parseKey(key)) {
+      var day = Math.round((parseKey(key) - parseKey(PRE.start)) / 86400000);
+      hit = PRE.states[type + '|' + level][day];
+    }
+    return rng(typeof hit === 'number' ? hit >>> 0 : seedFor(type, level, key));
+  }
   function levelIndex(level) { var i = LEVELS.indexOf(level); return i < 0 ? 0 : i; }
 
   // A1-style cell names: rows are numbered from the top, columns lettered from the left
@@ -81,11 +96,12 @@
   var WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
   function word(n) { return WORDS[n] || String(n); }
 
-  return {
-    VERSION: VERSION, LEVELS: LEVELS, LEVEL_NAMES: LEVEL_NAMES,
+  var api = {
+    VERSION: VERSION, setPre: setPre, rngFor: rngFor, lastStart: null, LEVELS: LEVELS, LEVEL_NAMES: LEVEL_NAMES,
     hash: hash, rng: rng, dateKey: dateKey, parseKey: parseKey, addDays: addDays,
     seedFor: seedFor, levelIndex: levelIndex,
     cellName: cellName, rowName: rowName, colName: colName, COLS: COLS,
     listJoin: listJoin, plural: plural, word: word
   };
+  return api;
 });

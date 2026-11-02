@@ -56,7 +56,7 @@
  {
   "path": "/printable/",
   "kind": "tool",
-  "words": 820,
+  "words": 825,
   "title": "Printable Logic Puzzles: Free Weekly Garden Packs",
   "noindex": false,
   "ads": true,
@@ -74,7 +74,7 @@
  {
   "path": "/guides/star-battle-strategy/",
   "kind": "guide",
-  "words": 1037,
+  "words": 1052,
   "title": "Star Battle Strategy: 7 Techniques From Easy to Expert",
   "noindex": false,
   "ads": true,
@@ -110,7 +110,7 @@
  {
   "path": "/guides/solve-logic-grid-puzzles/",
   "kind": "guide",
-  "words": 935,
+  "words": 990,
   "title": "How to Solve Logic Grid Puzzles Without Guessing",
   "noindex": false,
   "ads": true,
@@ -119,7 +119,7 @@
  {
   "path": "/guides/fair-logic-puzzles-unique-solutions/",
   "kind": "guide",
-  "words": 962,
+  "words": 966,
   "title": "What Makes a Logic Puzzle Fair? Unique Solutions Explained",
   "noindex": false,
   "ads": true,
@@ -173,7 +173,7 @@
  {
   "path": "/about/",
   "kind": "about",
-  "words": 517,
+  "words": 545,
   "title": "About Daily Logic Garden – Method, Publisher and Limits",
   "noindex": false,
   "ads": false,
@@ -200,7 +200,7 @@
  {
   "path": "/privacy/",
   "kind": "legal",
-  "words": 978,
+  "words": 1008,
   "title": "Privacy Policy – Daily Logic Garden (Ads, Consent, Data)",
   "noindex": false,
   "ads": false,

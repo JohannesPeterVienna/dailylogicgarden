@@ -30,6 +30,8 @@ return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 return {
 next: next,
+state: function () { return a; },
+mark: function () { api.lastStart = a; },
 int: function (n) { return Math.floor(next() * n); },
 pick: function (arr) { return arr[Math.floor(next() * arr.length)]; },
 shuffle: function (arr) {
@@ -58,6 +60,16 @@ d.setUTCDate(d.getUTCDate() + n);
 return dateKey(d);
 }
 function seedFor(type, level, key) { return VERSION + '|' + type + '|' + level + '|' + key; }
+var PRE = null;
+function setPre(table) { PRE = table || null; }
+function rngFor(type, level, key) {
+var hit;
+if (PRE && PRE.states[type + '|' + level] && parseKey(key)) {
+var day = Math.round((parseKey(key) - parseKey(PRE.start)) / 86400000);
+hit = PRE.states[type + '|' + level][day];
+}
+return rng(typeof hit === 'number' ? hit >>> 0 : seedFor(type, level, key));
+}
 function levelIndex(level) { var i = LEVELS.indexOf(level); return i < 0 ? 0 : i; }
 var COLS = 'ABCDEFGHIJKLMNOP';
 function cellName(r, c) { return COLS[c] + (r + 1); }
@@ -70,14 +82,16 @@ return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
 function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
 var WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 function word(n) { return WORDS[n] || String(n); }
-return {
-VERSION: VERSION, LEVELS: LEVELS, LEVEL_NAMES: LEVEL_NAMES,
+var api = {
+VERSION: VERSION, setPre: setPre, rngFor: rngFor, lastStart: null, LEVELS: LEVELS, LEVEL_NAMES: LEVEL_NAMES,
 hash: hash, rng: rng, dateKey: dateKey, parseKey: parseKey, addDays: addDays,
 seedFor: seedFor, levelIndex: levelIndex,
 cellName: cellName, rowName: rowName, colName: colName, COLS: COLS,
 listJoin: listJoin, plural: plural, word: word
 };
+return api;
 });
+DLG.core.setPre({"start":"2026-11-02","states":{"flowerbeds|sprout":[3419388765,965089105,1408069819,3039767517,218454968,3684923126,700444215,1995577759,145227246,2078297476,597967473,2459531732,964014680,1341972867,1791831678,754294151,3311400516,137401580,3440534855,1126296068,205242956,1726042525,537005311,3203299388,3589148849,1267301332,2633497819,692603970,1253545179,2255899588,2344334634,2770775895,608492258,1506668289,1448355863,2273907205,1601905326,2657073298,332815571,1369450848,3647542695,3324859655,3818307185,3665738080,203955676,1381556841,2882102183,1168348429,566211317,157612230,2650491566,2106786454,1489146499,1102235606,1423106511,3897669305,2758245770,1384433141,3720768131,4049862583,1805144502,3566614459,1725839045,2945597888,2424174402,3346920761,3446758980,3734662341,2430788677,2636644964,3866995811,2664406054,2185450811,4170281320,3443094388,2037367936,1314835383,2109732754,1752611973,2758068783,1444756332,669938537,2454804367,4244856566,2734736648,1574516838,2416620154,2883161201,718684416,2550433076,2193046520,564534103,3636564845,556841890,3853598184,1649836189,3712486502,3977338075,3722616362,1291826693,1190624648,322314636,1556092166,1684918377,424316452,3841657005,2323861,1628045707,4101305883,3863339241,1552228851,1500408989,1579098522,3454442771,771455504,2061143143,4189828194,3409042892,3523291783,209550802,3719573652,3189138325,2025572622,3593904454,297745093,3636881794,3675227158,3443623176,1856351907,655763918,1824966610,2456715100,403330087,673513993,421817217,1103976039,3141563877,3861423505,4209573812,2738791335,2364100073,3709118916,3804116199,389120368,4122074859,1391980888,313673894,2748153564,2753379424,1581670856],"flowerbeds|grove":[145219665,3622206169,2451381683,4174383427,783409292,1993257472,219123372,123806927,155229135,3901172441,1233459458,1562439673,4053231170,796824058,1108789403,1919174251,1565647274,1413112803,3410281875,333335557,2828591544,3179680818,3676322276,3607178872,4020074069,155151234,1139497144,3829846813,3622632783,3998576871,2559910543,251564011,3262272375,3223534410,245155703,2163577451,3882045075,88287125,706883459,2358822213,131104030,661448116,2189546864,3980611273,2203841026,605347257,870143630,2961822179,889772142,129110684,1993379094,3726481657,53714119,2731618606,4003552404,4089798746,1369957505,309322006,2957575668,2965101521,2548793336,761401899,2153526473,3462191032,3927804865,3532763962,1669320974,2084908812,3646460735,1606660693,1932900999,2102284166,1318726215,1093998539,3233472858,2536254457,2067977231,2102469795,763130545,3310833480,3849755117,2961694868,877373568,1345326783,4226461906,4103848709,2894855066,2462730805,2833935888,3110311107,50266906,3198744734,3241326632,773071525,3840241876,2761213261,1763728882,1263442425,3362196313,1959265510,1972021102,1552497287,1004028101,3122762439,4020632095,2496807984,243113589,1694546527,2440874455,3131678483,336350657,64376254,2365931603,4202049395,2549511049,1037338838,592779142,1784432597,4096752527,1468014782,1837576141,3218439290,3971140719,572676573,1768140191,3175411554,1787124015,2012390409,709200562,2795844259,3641458038,184279490,2720398835,2225184851,3782298670,3867075599,2483362155,1074625293,3705762404,3545072279,915460849,3267888658,4224618828,2759142291,2566721297,613708098,711962197,2945845596,71019129,20925260],"sunshade|grove":[221505196,2341940773,1377217107,2567937880,1190973044,3526839609,3525901525,103701032,2090501410,2912335714,3549122158,2816579675,3862486370,2064713761,2999233283,1155513015,612604992,3297632251,1471022230,255614276,3423246827,594166169,3543392908,2889752177,3724557660,2492884365,503308922,1151110551,828949330,2506704861,3304197319,3621309186,94859847,3515701800,914334514,2159260690,202649757,664455083,1710144625,687288649,1633847699,956958273,2710798149,2734052532,998658834,1481016595,2816430717,3675246640,2458057376,360265117,2704012806,3475966213,1144428261,3355644933,403495635,266070657,263511629,2554776432,2739344617,544099593,1264651104,141362287,3093141792,3735780511,1750789937,759701570,2808674460,3770859285,2114685316,414528659,3043219262,3688484371,2306309566,265940493,2887494528,1809476080,3539569868,3769125385,3116350704,230500555,3333716489,1008237116,2248940293,1941153766,396180073,4146363464,304688880,2896481218,1237991108,1146036189,3561330842,2132898553,2572609962,1047276767,2966826182,1458875269,4172295922,1658659966,3748072700,2281568286,2123741831,2889583752,2568730857,720415749,3213004937,3446574159,1850733856,2248505233,3822462610,961497960,2102167567,625301782,1701936084,2404957527,2823724211,3006138108,1877292538,3662239802,2464124326,1923876827,3467764893,2461410391,1028979002,3976298127,2425888684,3295357350,2598542949,1368202610,2990795387,503164232,3703971767,2642401901,1716924399,3240200168,837726210,1237081151,2613204964,1004450335,4077027953,309425660,4041398967,3378602815,3470445075,732924820,4192552980,2407808272,3070089797,586453381,4185607167,2196348342],"gardenpath|bloom":[4184381567,3628382320,1781324870,2248080012,3553935937,682044681,2397000138,2371118969,462247863,142879113,4248900916,1075783216,1755264689,3183174478,1022769870,4116212320,3926251632,477054657,848028768,1902940536,3691313863,1149487883,2938052950,3414175845,1979371691,1081438238,3983188523,4001650366,3128544279,3676468598,1364729483,3107349444,793006457,3889208276,1620234586,4110150529,3580152135,2142066364,3356884670,2558026119,3571285106,2113915907,2612247868,621331575,1616309250,2619312620,757525976,1865168769,2547922603,1830299406,2810128961,354252016,3552735658,972361959,2662421994,1693835389,1819830790,2342512189,862125053,3451145518,4174750632,2251160577,2880552072,2443027961,2941013003,1621000637,3999444811,4167895151,3927187257,1742046679,1866570736,948370963,4009228881,3892916942,7591859,1429211505,3306124149,3518825469,3435325214,2112422456,2387631765,350995500,2905951807,895506151,2135269915,2333106699,2511062805,2428523922,1965037138,3442538511,2840058703,125591211,2620613299,2497163736,1697259283,3600076918,3216770235,1518773793,777997490,4038007400,3991172006,3359335558,1961108817,2771679687,4187991572,732666483,1322866277,3289833654,4124053079,1148542755,608963599,2421782343,3287508207,3819724788,429266381,3785827254,3216794885,1074801169,3067902951,367027787,3040465364,3196151734,1873023681,1091656240,207147465,1580031502,3178182132,2812842917,519176422,3045172517,1498599669,3333311890,232746008,3203530967,91256358,1212144651,2897527773,1107863832,2379368999,4042431372,3624911904,3987658945,3460044071,3460686442,2478586653,1810137531,4259052503,222227423,1715876578,1917585739],"gardenpath|grove":[3566702934,3002203076,1308628095,4273592629,481064232,1270040029,934993900,564183572,3163788468,2391278202,991625164,902402561,2563793556,2615865229,3532142548,3552755874,2186781155,2320247947,2044825102,2761134776,484982177,1489937431,3479620766,1795115199,2020976671,4069743625,3332146847,2971431927,1493935937,3199800,1171754209,34738732,149285318,1521282337,3720573753,1504149676,3814654452,1960104200,1053950627,1324419237,2328106929,1761532592,3382685612,156550636,2130508583,332524880,2822893415,3985564187,3125506886,2154759689,410769705,3008078288,172027204,3389651726,3405095434,2657920741,3018648777,248052320,934491956,2511626375,3735344214,3305008449,511447922,3697069569,1784528479,1637197143,2893688002,2054403513,173401147,1811174246,1038539813,1121143948,2806494130,4096010675,1473636897,2144966150,3476820972,1607710193,3680536696,837428423,3579293786,4268798984,317538993,937923011,2983698317,81828166,3769729629,541678122,2459639385,3991852673,2031461480,1802751501,511303950,575482023,2191426133,4282604482,1418600504,3776512308,3099492294,180815261,548250110,585092686,876149883,146418245,4149376339,2844237100,1306009286,1262516729,2211795593,1755061199,1446997625,452156727,1356524071,3312737429,905976286,1873207612,4058465730,235489970,2703726843,588535421,782838285,2825802919,1288908767,3298514786,1621555337,126354610,4046027207,327763692,3319200434,3575031129,3164020089,2920262732,592008262,2106020912,3124022663,3566548944,1693474231,2871112660,3174389407,3883165748,3747472410,1119181373,1727634602,2117853566,4243784260,2053333442,1407392457,1760867702,392473628,1209451084]}});
 (function (root, factory) {
 var core = typeof module !== 'undefined' && module.exports ? require('./core.js') : root.DLG.core;
 var api = factory(core);
@@ -391,30 +405,14 @@ var map = {}, next = 0;
 regions.forEach(function (reg) { if (!(reg in map)) map[reg] = next++; });
 return regions.map(function (reg) { return map[reg]; });
 }
-function colorBeds(n, regions) {
-var adj = [];
-for (var i = 0; i < n; i++) adj.push({});
-for (var k = 0; k < n * n; k++) {
-var r = Math.floor(k / n), c = k % n;
-if (c + 1 < n && regions[k] !== regions[k + 1]) { adj[regions[k]][regions[k + 1]] = 1; adj[regions[k + 1]][regions[k]] = 1; }
-if (r + 1 < n && regions[k] !== regions[k + n]) { adj[regions[k]][regions[k + n]] = 1; adj[regions[k + n]][regions[k]] = 1; }
-}
-var colors = [];
-for (i = 0; i < n; i++) {
-var taken = {};
-Object.keys(adj[i]).forEach(function (j) { if (colors[j] !== undefined) taken[colors[j]] = 1; });
-var col = i % 6;
-for (var t = 0; t < 6 && taken[col]; t++) col = (col + 1) % 6;
-colors.push(col);
-}
-return colors;
-}
+function colorBeds(n) { var c = []; for (var i = 0; i < n; i++) c.push(i % 8); return c; }
 function generate(key, level, opts) {
 level = level in SIZES ? level : 'sprout';
 var n = SIZES[level], target = TIERS[level];
-var R = core.rng(core.seedFor('flowerbeds', level, key));
+var R = core.rngFor('flowerbeds', level, key);
 var maxAttempts = (opts && opts.maxAttempts) || 4000, fallback = null;
 for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+R.mark();
 var pos = randomFlowers(n, R);
 var regions = makeUnique(n, pos, growRegions(n, pos, R), R);
 if (!regions) continue;
@@ -727,9 +725,10 @@ return { trees: trees, rowCount: rowCount, colCount: colCount, sol: s };
 function generate(key, level, opts) {
 level = level in SIZES ? level : 'sprout';
 var n = SIZES[level], target = TIERS[level];
-var R = core.rng(core.seedFor('tents', level, key));
+var R = core.rngFor('tents', level, key);
 var maxAttempts = (opts && opts.maxAttempts) || 4000;
 for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+R.mark();
 var L = layout(n, R), g = geometry(n, L.trees, L.rowCount, L.colCount);
 var res = solveLogic(g, initial(g), target);
 if (!res.solved || res.maxTier !== target) continue;
@@ -1072,9 +1071,10 @@ return out;
 function generate(key, level, opts) {
 level = level in SIZES ? level : 'sprout';
 var n = SIZES[level], target = TIERS[level], g = geometry(n);
-var R = core.rng(core.seedFor('sunshade', level, key));
+var R = core.rngFor('sunshade', level, key);
 var maxAttempts = (opts && opts.maxAttempts) || 200;
 for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+R.mark();
 var sol = randomGrid(n, R), givens = Int8Array.from(sol);
 var order = R.shuffle(Array.from({ length: n * n }, function (_, i) { return i; }));
 for (var i = 0; i < order.length; i++) {
@@ -1417,9 +1417,10 @@ return solveLogic(g, blank(g), tier);
 function generate(key, level, opts) {
 level = level in SIZES ? level : 'sprout';
 var n = SIZES[level], target = TIERS[level], N = n * n;
-var R = core.rng(core.seedFor('gardenpath', level, key));
+var R = core.rngFor('gardenpath', level, key);
 var maxAttempts = (opts && opts.maxAttempts) || 400;
 for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+R.mark();
 var path = randomPath(n, R);
 var idxs = [0, N - 1], guard = 0, hedges = [];
 if (HEDGES[level]) {
@@ -1799,9 +1800,10 @@ return pool;
 function generate(key, level, opts) {
 level = level in CFG ? level : 'sprout';
 var cfg = CFG[level], target = TIERS[level];
-var R = core.rng(core.seedFor('whoplanted', level, key));
+var R = core.rngFor('whoplanted', level, key);
 var maxAttempts = (opts && opts.maxAttempts) || 300;
 for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+R.mark();
 var p = { type: 'whoplanted', key: key, level: level, m: M, cats: cfg.cats.slice(), items: [], clues: [] };
 p.cats.forEach(function (kind) {
 if (kind === 'who') p.items.push(R.shuffle(NAMES.slice()).slice(0, M).sort());
@@ -2003,7 +2005,7 @@ var extra = p.type === 'flowerbeds' ? '<p class="sheet-rules">Beds: ' + p.beds.m
 return '<section class="print-sheet"><h2>' + esc(title) + '</h2><p class="sheet-rules">' + RULES[p.type] + '</p>' + body + extra + '<p class="sheet-rules">dailylogicgarden.com &middot; one solution, no guessing needed.</p></section>';
 }
 var KIND = { flowerbeds: 'daisy', tents: 'fir', sunshade: 'sunflower', gardenpath: 'fern', whoplanted: 'tulip' };
-var SCALE = { sprout: 0.6, bloom: 0.82, grove: 1.05 };
+var SCALE = { sprout: 0.62, bloom: 0.9, grove: 1.3 };
 function plantSVG(kind, x, y, sc) {
 var t = 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') scale(' + sc.toFixed(2) + ')';
 if (kind === 'daisy') return '<g transform="' + t + '"><path d="M0 0V-34" stroke="#3f7a4a" stroke-width="2.4"/><path d="M0-14q-9-4-12 2q8 3 12-2" fill="#5f9a5e"/><g fill="#fff" stroke="#7B3F69" stroke-width=".8">' + [0, 60, 120, 180, 240, 300].map(function (a) { return '<ellipse cx="0" cy="-44" rx="3.6" ry="8" transform="rotate(' + a + ' 0 -36)"/>'; }).join('') + '</g><circle cx="0" cy="-36" r="4.2" fill="#E3B23C"/></g>';
@@ -2015,16 +2017,17 @@ return '<g transform="' + t + '"><path d="M0 0V-30" stroke="#3f7a4a" stroke-widt
 function season(month) { return month < 2 || month === 11 ? 'winter' : month < 5 ? 'spring' : month < 8 ? 'summer' : 'autumn'; }
 var SKY = { spring: ['#EAF3E2', '#CFE3BE'], summer: ['#F4F0D8', '#D7E6B5'], autumn: ['#F5E8D6', '#E2CFA3'], winter: ['#E9EEF2', '#D3DCE2'] };
 function gardenSVG(plants, month, title) {
-var W = 720, rows = Math.max(1, Math.ceil(plants.length / 18)), H = 150 + rows * 70;
+var W = 720, rows = Math.max(1, Math.ceil(plants.length / 18)), H = 170 + rows * 80;
 var sn = season(month), sky = SKY[sn];
 var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-labelledby="garden-t"><title id="garden-t">' + esc(title) + '</title>' +
-'<rect width="' + W + '" height="' + H + '" fill="' + sky[0] + '"/><rect y="' + (H - rows * 70 - 40) + '" width="' + W + '" height="' + (rows * 70 + 40) + '" fill="' + sky[1] + '"/>';
-for (var r = 0; r < rows; r++) s += '<path d="M20 ' + (H - r * 70 - 26) + 'H' + (W - 20) + '" stroke="#8a6a44" stroke-width="5" stroke-linecap="round" opacity=".55"/>';
+'<rect width="' + W + '" height="' + H + '" fill="' + sky[0] + '"/><rect y="' + (H - rows * 80 - 40) + '" width="' + W + '" height="' + (rows * 80 + 40) + '" fill="' + sky[1] + '"/>';
+for (var r = 0; r < rows; r++) s += '<path d="M20 ' + (H - r * 80 - 26) + 'H' + (W - 20) + '" stroke="#8a6a44" stroke-width="5" stroke-linecap="round" opacity=".55"/>';
 if (sn === 'winter') for (var i = 0; i < 40; i++) s += '<circle cx="' + ((i * 97) % W) + '" cy="' + ((i * 53) % (H - 60)) + '" r="2" fill="#fff" opacity=".8"/>';
 if (sn === 'autumn') for (i = 0; i < 16; i++) s += '<ellipse cx="' + ((i * 131) % W) + '" cy="' + (30 + (i * 37) % 60) + '" rx="4" ry="2" fill="#c27a2c" opacity=".6" transform="rotate(' + (i * 40) + ' ' + ((i * 131) % W) + ' ' + (30 + (i * 37) % 60) + ')"/>';
 plants.forEach(function (pl, idx) {
-var row = Math.floor(idx / 18), col = idx % 18;
-var x = 40 + col * 37 + (row % 2 ? 18 : 0), y = H - row * 70 - 28;
+var row = Math.floor(idx / 18), col = idx % 18, inRow = Math.min(18, plants.length - row * 18);
+var step = (W - 80) / inRow;
+var x = 40 + step * (col + 0.5) + (row % 2 ? step / 4 : 0), y = H - row * 80 - 28;
 s += plantSVG(KIND[pl.type] || 'tulip', x, y, SCALE[pl.level] || 0.7);
 });
 if (!plants.length) s += '<text x="' + W / 2 + '" y="' + (H / 2) + '" text-anchor="middle" font-size="18" fill="#4B5D50">Your garden is ready for its first plant.</text>';
@@ -2044,6 +2047,7 @@ whoplanted: { name: 'Who Planted What', path: '/who-planted-what/', plant: 'a tu
 };
 var TYPES = ['flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted'];
 var ARCHIVE_DAYS = 30;
+var LAUNCH = '2026-11-02'; // the archive never reaches back before the launch day
 var store = {
 get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
 set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
@@ -2067,7 +2071,7 @@ return q;
 function validDate(key) {
 if (!core.parseKey(key)) return null;
 var t = today();
-return key <= t && key >= core.addDays(t, -(ARCHIVE_DAYS - 1)) ? key : null;
+return key <= t && key >= core.addDays(t, -(ARCHIVE_DAYS - 1)) && key >= LAUNCH ? key : null;
 }
 function longDate(key) {
 var d = core.parseKey(key);
@@ -2280,6 +2284,7 @@ self.prefsEl.appendChild(lab);
 };
 G.renderPrint = function () {
 if (!this.printRoot) return;
+document.body.classList.add('has-print');
 this.printRoot.innerHTML = draw.printSheet(this.p, D, META[this.type].name + ' – ' + core.LEVEL_NAMES[this.level] + ' – ' + longDate(this.key));
 };
 function squareBoard(game, n, opts) {
@@ -2398,7 +2403,7 @@ this.dragMark = function (k, first) { if (self.user[k] === 0) { if (first) self.
 update: function () {
 var p = this.p, n = p.n, u = this.user, mod = this.mod;
 var blocked = {}, bad = {};
-if (this.prefs.dots) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
+if (this.prefs.dots && !this.done) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
 mod.conflicts(p, u).forEach(function (x) { bad[x] = 1; });
 var hl = this.markHints();
 this.cellEls.forEach(function (cell, k) {
@@ -2436,7 +2441,7 @@ this.dragMark = function (k, first) { if (self.user[k] === 0) { if (first) self.
 },
 update: function () {
 var p = this.p, n = p.n, u = this.user, mod = this.mod, blocked = {}, bad = {};
-if (this.prefs.dots) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
+if (this.prefs.dots && !this.done) mod.blockedBy(p, u).forEach(function (x) { blocked[x] = 1; });
 mod.conflicts(p, u).forEach(function (x) { bad[x] = 1; });
 var hl = this.markHints();
 this.cellEls.forEach(function (cell, k) {
@@ -2627,13 +2632,26 @@ var CAT = { who: 'Gardeners', plant: 'Crops', bed: 'Beds', day: 'Days' };
 var cl = el('ol', { 'class': 'lg-clues', 'aria-label': 'Clues' });
 p.clueTexts.forEach(function (t) { cl.appendChild(el('li', {}, t.replace(/&/g, '&amp;').replace(/</g, '&lt;'))); });
 this.stage.appendChild(el('p', { 'class': 'howto', style: 'margin-top:0' }, 'Each gardener planted one crop' + (p.cats.length > 3 ? ', in one bed, on one day' : ' in one bed') + '. Bed 1 is nearest the gate.'));
-this.stage.appendChild(cl);
+var cbox = el('details', { 'class': 'lg-cluebox', open: '' });
+cbox.appendChild(el('summary', {}, 'Clues (' + p.clueTexts.length + ')'));
+cbox.appendChild(cl);
+this.stage.appendChild(cbox);
 this.clueEls = cl.children;
+var tabs = el('div', { 'class': 'lg-tabs', role: 'group', 'aria-label': 'Choose a grid' });
+this.stage.appendChild(tabs);
 var wrap = el('div', { 'class': 'lg-grids' });
+self.showGrid = function (q) {
+Array.prototype.forEach.call(wrap.children, function (b, i) { b.classList.toggle('active', i === q); });
+Array.prototype.forEach.call(tabs.children, function (b, i) { b.setAttribute('aria-pressed', String(i === q)); });
+self.activeGrid = q;
+};
 this.cellEls = [];
 g.pairs.forEach(function (pr, q) {
 var a = pr[0], b = pr[1];
 var box = el('div', { 'class': 'lg', role: 'grid', 'aria-label': CAT[p.cats[a]] + ' and ' + CAT[p.cats[b]] });
+var tb = el('button', { type: 'button', 'aria-pressed': 'false' }, CAT[p.cats[a]] + ' \u00d7 ' + CAT[p.cats[b]]);
+tb.addEventListener('click', function () { self.showGrid(q); });
+tabs.appendChild(tb);
 box.appendChild(el('div', { 'class': 'cap' }, CAT[p.cats[a]] + ' × ' + CAT[p.cats[b]]));
 box.appendChild(el('div', {}));
 for (var j = 0; j < m; j++) box.appendChild(el('div', { 'class': 'ch', 'aria-hidden': 'true' }, mod.label(p, b, j)));
@@ -2649,6 +2667,7 @@ box.appendChild(c);
 wrap.appendChild(box);
 });
 this.stage.appendChild(wrap);
+self.showGrid(0);
 this.stage.appendChild(el('p', { 'class': 'howto' }, 'Tap a square once for ✕ (no), twice for ● (yes), a third time to clear. Keyboard: arrows move inside a grid, <kbd>Tab</kbd> jumps to the next grid, <kbd>Y</kbd> yes, <kbd>N</kbd> no, <kbd>Backspace</kbd> clear.'));
 function cycle(k) {
 var v = [2, 1, 0][self.user[k]];
@@ -2684,6 +2703,10 @@ c.textContent = v === 1 ? '●' : v === 2 ? '✕' : '';
 c.className = 'cell' + (v === 1 ? ' yes' : v === 2 ? ' no' : '') + (hl.focus[k] ? ' hl-focus' : '') + (hl.target[k] ? ' hl-target' : '');
 c.setAttribute('aria-label', mod.label(p, ci.a, ci.i) + ' and ' + mod.label(p, ci.b, ci.j) + ': ' + (v === 1 ? 'yes' : v === 2 ? 'no' : 'open'));
 });
+if (hl && this.hint && this.hint.cells && this.hint.cells.length && this.showGrid) {
+var q0 = Math.floor(this.hint.cells[0] / (g.m * g.m));
+if (q0 !== this.activeGrid) this.showGrid(q0);
+}
 var cited = {};
 if (this.hint && /^Clue (\d+)/.test(this.hint.text || '')) cited[+/^Clue (\d+)/.exec(this.hint.text)[1] - 1] = 1;
 Array.prototype.forEach.call(this.clueEls, function (li, i) { li.className = cited[i] ? 'hl' : ''; });
@@ -2746,6 +2769,7 @@ function renderArchive(box) {
 var done = solvedSet(), t = today(), html = '';
 for (var i = 0; i < ARCHIVE_DAYS; i++) {
 var key = core.addDays(t, -i);
+if (key < LAUNCH) break;
 html += '<section class="day"><h3>' + (i === 0 ? 'Today – ' : '') + longDate(key) + '</h3><ul>';
 TYPES.forEach(function (ty) {
 html += '<li>' + META[ty].name + '<span>' + core.LEVELS.map(function (l) {
@@ -2759,36 +2783,44 @@ box.innerHTML = html;
 var total = 0;
 garden().plants.forEach(function (p) { if (p.key >= core.addDays(t, -(ARCHIVE_DAYS - 1))) total++; });
 var sum = document.querySelector('[data-archive-sum]');
-if (sum) sum.textContent = 'You have solved ' + total + ' of the ' + ARCHIVE_DAYS * 15 + ' puzzles in the last ' + ARCHIVE_DAYS + ' days on this device.';
+var shown = box.querySelectorAll('.day').length;
+if (sum) sum.textContent = 'You have solved ' + total + ' of the ' + shown * 15 + ' puzzles listed here on this device.' + (shown < ARCHIVE_DAYS ? ' The archive starts on the launch day, November 2, 2026, and grows to 30 days.' : '');
 }
 function bindPrintable(form) {
 var start = form.querySelector('[name=start]'), out = form.querySelector('[data-pack-msg]');
 var t = today(), min = core.addDays(t, -(ARCHIVE_DAYS - 1));
-start.min = min; start.max = t; start.value = core.addDays(t, -6);
+if (min < LAUNCH) min = LAUNCH;
+start.min = min; start.max = t; start.value = core.addDays(t, -6) < min ? min : core.addDays(t, -6);
 form.addEventListener('submit', function (ev) {
 ev.preventDefault();
-var from = validDate(start.value) || core.addDays(t, -6);
+var from = validDate(start.value) || min;
 var level = form.querySelector('[name=level]').value;
 var types = TYPES.filter(function (ty) { var b = form.querySelector('[name=t-' + ty + ']'); return b && b.checked; });
 if (!types.length) { out.textContent = 'Pick at least one puzzle type.'; return; }
-var root = document.querySelector('.print-root'), html = '', days = 0, keys = [];
+var root = document.querySelector('.print-root'), html = '', keys = [];
 for (var i = 0; i < 7; i++) { var key = core.addDays(from, i); if (key > t) break; keys.push(key); }
-out.textContent = 'Growing ' + keys.length * types.length + ' puzzles…';
-setTimeout(function () {
-keys.forEach(function (key) {
-types.forEach(function (ty) {
-var p = D[ty].generate(key, level);
-html += draw.printSheet(p, D, META[ty].name + ' – ' + core.LEVEL_NAMES[level] + ' – ' + longDate(key));
-});
-days++;
-});
+var jobs = [];
+keys.forEach(function (key) { types.forEach(function (ty) { jobs.push([key, ty]); }); });
+out.textContent = 'Growing ' + jobs.length + ' puzzles…';
+var btn = form.querySelector('button[type=submit]');
+btn.disabled = true;
+(function next(i) {
+if (i < jobs.length) {
+var p = D[jobs[i][1]].generate(jobs[i][0], level);
+html += draw.printSheet(p, D, META[jobs[i][1]].name + ' – ' + core.LEVEL_NAMES[level] + ' – ' + longDate(jobs[i][0]));
+out.textContent = 'Growing puzzle ' + (i + 1) + ' of ' + jobs.length + '…';
+setTimeout(function () { next(i + 1); }, 0);
+return;
+}
 root.innerHTML = html;
+document.body.classList.add('has-print');
 var prev = document.querySelector('[data-pack-preview]');
-if (prev) prev.innerHTML = '<p>Ready: ' + core.plural(keys.length * types.length, 'puzzle') + ' from ' + longDate(keys[0]) + ' to ' + longDate(keys[keys.length - 1]) + ', one per page. The pack opens in your browser’s print dialog; choose “Save as PDF” there to keep a file.</p>';
-out.textContent = 'Pack ready – ' + core.plural(keys.length * types.length, 'page') + '.';
-form.setAttribute('data-ready', String(keys.length * types.length));
+if (prev) prev.innerHTML = '<p>Ready: ' + core.plural(jobs.length, 'puzzle') + ' from ' + longDate(keys[0]) + ' to ' + longDate(keys[keys.length - 1]) + ', one per page. The pack opens in your browser’s print dialog; choose “Save as PDF” there to keep a file.</p>';
+out.textContent = 'Pack ready – ' + core.plural(jobs.length, 'page') + '.';
+form.setAttribute('data-ready', String(jobs.length));
+btn.disabled = false;
 window.print();
-}, 30);
+})(0);
 });
 }
 function init() {

@@ -343,31 +343,16 @@
     return regions.map(function (reg) { return map[reg]; });
   }
 
-  function colorBeds(n, regions) {
-    var adj = [];
-    for (var i = 0; i < n; i++) adj.push({});
-    for (var k = 0; k < n * n; k++) {
-      var r = Math.floor(k / n), c = k % n;
-      if (c + 1 < n && regions[k] !== regions[k + 1]) { adj[regions[k]][regions[k + 1]] = 1; adj[regions[k + 1]][regions[k]] = 1; }
-      if (r + 1 < n && regions[k] !== regions[k + n]) { adj[regions[k]][regions[k + n]] = 1; adj[regions[k + n]][regions[k]] = 1; }
-    }
-    var colors = [];
-    for (i = 0; i < n; i++) {
-      var taken = {};
-      Object.keys(adj[i]).forEach(function (j) { if (colors[j] !== undefined) taken[colors[j]] = 1; });
-      var col = i % 6;
-      for (var t = 0; t < 6 && taken[col]; t++) col = (col + 1) % 6;
-      colors.push(col);
-    }
-    return colors;
-  }
+  // eight tones for at most eight beds: every bed gets its own tone (plus its own pattern and name)
+  function colorBeds(n) { var c = []; for (var i = 0; i < n; i++) c.push(i % 8); return c; }
 
   function generate(key, level, opts) {
     level = level in SIZES ? level : 'sprout';
     var n = SIZES[level], target = TIERS[level];
-    var R = core.rng(core.seedFor('flowerbeds', level, key));
+    var R = core.rngFor('flowerbeds', level, key);
     var maxAttempts = (opts && opts.maxAttempts) || 4000, fallback = null;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      R.mark();
       var pos = randomFlowers(n, R);
       var regions = makeUnique(n, pos, growRegions(n, pos, R), R);
       if (!regions) continue;

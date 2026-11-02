@@ -9,9 +9,9 @@
   --moss:#23412F; --moss-2:#2F5A40; --sage:#F1F4EC; --paper:#FBFCF8; --leaf:#DCE6D2;
   --ink:#1C2A21; --muted:#4B5D50; --line:#B9C8B4; --line-strong:#23412F;
   --pollen:#E3B23C; --pollen-ink:#6B4A00; --plum:#7B3F69; --plum-soft:#F2E3EE; --warn:#A3322B;
-  --bed0:#DCEACB; --bed1:#F4DEC3; --bed2:#D7E2F1; --bed3:#EDD6E6; --bed4:#F2EAB9; --bed5:#CFE7E0;
+  --bed0:#DCEACB; --bed1:#F4DEC3; --bed2:#D7E2F1; --bed3:#EDD6E6; --bed4:#F2EAB9; --bed5:#CFE7E0; --bed6:#E6DCF3; --bed7:#F6D5CF;
   --pat:rgba(35,65,47,.28); --given:#DCE6D2; --cell-bg:#FFFFFF; --focus:#7B3F69; --shadow:0 1px 2px rgba(20,40,25,.08),0 6px 18px rgba(20,40,25,.07);
-  --sun:#C98A00; --shade:#3E5C76; --tent:#7B3F69; --tree:#2F6B3F;
+  --sun:#B57A00; --shade:#3E5C76; --tent:#7B3F69; --tree:#2F6B3F;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark){
@@ -19,7 +19,7 @@
     --moss:#BFD8B8; --moss-2:#9CC39A; --sage:#111C15; --paper:#17251C; --leaf:#22382A;
     --ink:#E7EEE3; --muted:#B4C3B3; --line:#3C5444; --line-strong:#C9DCC3; --given:#34523F;
     --pollen:#E9BE55; --pollen-ink:#F3D58E; --plum:#E1A6CF; --plum-soft:#3A2534; --warn:#FF9C8F;
-    --bed0:#2C4429; --bed1:#4A3721; --bed2:#26364A; --bed3:#45293E; --bed4:#45401C; --bed5:#1F4139;
+    --bed0:#2C4429; --bed1:#4A3721; --bed2:#26364A; --bed3:#45293E; --bed4:#45401C; --bed5:#1F4139; --bed6:#3A2F55; --bed7:#552B26;
     --pat:rgba(231,238,227,.22); --cell-bg:#1E2F24; --focus:#F0B7DD; --shadow:0 1px 2px rgba(0,0,0,.4);
     --sun:#F2C14E; --shade:#9DB9D6; --tent:#E8A9D3; --tree:#8FD19A;
     color-scheme: dark;
@@ -101,7 +101,8 @@ figcaption{font-size:.93rem;color:var(--muted);margin-top:.6rem}
 .hero svg{width:100%;height:auto}
 
 /* ---------- game ---------- */
-.game{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:1.2rem 0 1.5rem;box-shadow:var(--shadow);max-width:760px}
+.prose-wide{max-width:900px;margin:0 auto}
+.game{margin-left:auto!important;margin-right:auto!important;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:1.2rem 0 1.5rem;box-shadow:var(--shadow);max-width:760px}
 .game-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.6rem;margin-bottom:.8rem}
 .game-date{font-size:.95rem;color:var(--muted)}
 .lvl{display:inline-flex;border:2px solid var(--moss);border-radius:999px;overflow:hidden}
@@ -130,6 +131,7 @@ figcaption{font-size:.93rem;color:var(--muted);margin-top:.6rem}
 /* beds: tone + pattern + thick borders */
 .cell.b0{background-color:var(--bed0)} .cell.b1{background-color:var(--bed1)} .cell.b2{background-color:var(--bed2)}
 .cell.b3{background-color:var(--bed3)} .cell.b4{background-color:var(--bed4)} .cell.b5{background-color:var(--bed5)}
+.cell.b6{background-color:var(--bed6)} .cell.b7{background-color:var(--bed7)}
 .cell.p0{background-image:radial-gradient(var(--pat) 1.4px,transparent 1.6px);background-size:9px 9px}
 .cell.p1{background-image:repeating-linear-gradient(45deg,var(--pat) 0 1.5px,transparent 1.5px 8px)}
 .cell.p2{background-image:repeating-linear-gradient(-45deg,var(--pat) 0 1.5px,transparent 1.5px 8px)}
@@ -171,6 +173,19 @@ figcaption{font-size:.93rem;color:var(--muted);margin-top:.6rem}
 .howto{font-size:.95rem;color:var(--muted);margin:.4rem 0 0}
 .howto kbd{font:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .3em;background:var(--paper)}
 /* logic grid */
+.lg-cluebox{margin:0 0 .8rem}
+.lg-cluebox summary{cursor:pointer;font-weight:700;color:var(--moss);padding:.3rem 0;min-height:32px}
+.lg-tabs{display:none}
+@media (max-width:760px){
+  .lg-cluebox{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:2px solid var(--line);max-height:38vh;overflow:auto;padding:0 .2rem}
+  .lg-cluebox .lg-clues{margin-bottom:.3rem}
+  .lg-cluebox .lg-clues li{padding-top:.15rem;padding-bottom:.15rem;font-size:.95rem;line-height:1.4}
+  .lg-cluebox .lg-clues li::before{top:.15rem}
+  .lg-tabs{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;margin:.3rem 0 .6rem}
+  .lg-tabs button{font:700 .82rem "Atkinson Hyperlegible",sans-serif;border:1px solid var(--line-strong);background:var(--paper);color:var(--moss);border-radius:999px;padding:.3rem .6rem;min-height:36px;cursor:pointer}
+  .lg-tabs button[aria-pressed="true"]{background:var(--moss);color:var(--sage)}
+  .lg-grids .lg:not(.active){display:none}
+}
 .lg-clues{counter-reset:clue;padding-left:0;list-style:none;margin:.2rem 0 1rem}
 .lg-clues li{position:relative;padding:.35rem .4rem .35rem 2.2rem;border-radius:8px}
 .lg-clues li::before{counter-increment:clue;content:counter(clue);position:absolute;left:.4rem;top:.35rem;width:1.4rem;height:1.4rem;border-radius:50%;background:var(--leaf);color:var(--moss);font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center}
@@ -215,7 +230,8 @@ footer.site .fine{color:var(--muted);margin-top:1.2rem;font-size:.88rem}
 @media print{
   body{background:#fff;color:#000;font-size:11pt}
   header.site,footer.site,nav,.crumbs,.ad,aside.side,.controls,.prefs,.hintbox,.solved,.no-print,.game-head .lvl,.skip{display:none!important}
-  main>*:not(.print-root){display:none!important}
+  body.has-print main .wrap>*:not(.print-root){display:none!important}
+  body.has-print .print-root{margin:0}
   .print-root,.print-only{display:block!important}
   .print-sheet{page-break-after:always;break-after:page}
   .print-sheet:last-child{page-break-after:auto;break-after:auto}

@@ -49,6 +49,7 @@
 
   var gtag = window.gtag || function () { (window.dataLayer = window.dataLayer || []).push(arguments); };
   var seen = { tc: null, cmReady: false, us: null, gpp: null, gppOn: false, sent: '' }, gaOn = false;
+  var lastTc = null; // latest TCF data, kept across the click-time withdrawal
   function startAnalytics() {
     if (gaOn || NO_GOOGLE) return;
     gaOn = true;
@@ -96,6 +97,7 @@
         if (typeof window.__tcfapi !== 'function') return;
         window.__tcfapi('addEventListener', 2, function (tc, ok) {
           seen.tc = ok ? tc : null;
+          if (ok && tc) lastTc = tc;
           if (ok && tc && tc.eventStatus === 'useractioncomplete' && typeof window.googlefc.getGoogleConsentModeValues === 'function') seen.cmReady = true;
           update();
         });
@@ -130,7 +132,7 @@
                 listenGpp();
               } catch (e) { seen.gpp = null; }
               update();
-            });
+            }, lastTc || before.tc);   // latest TCF data: GDPR applies -> revocation message
           } catch (e) { /* consent message not available here */ }
         });
         adScript();

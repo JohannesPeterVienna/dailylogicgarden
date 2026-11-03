@@ -95,6 +95,7 @@
   }
   /** Status for decide(): "law does not apply" from the CMP, otherwise only the current GPP value. */
   function usNow(initial, gpp) {
+    if (gpp === 3) return 3;   // a later GPP opt-out always wins, even over an initial DOES_NOT_APPLY (fail-closed)
     if (initial === US_LAW_NOT_APPLICABLE) return US_LAW_NOT_APPLICABLE;
     return gpp === US_NOT_OPTED_OUT || gpp === 3 ? gpp : null;
   }

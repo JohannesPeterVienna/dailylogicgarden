@@ -120,6 +120,12 @@ test('GPP: current U.S. opt-out state; without GPP a U.S. visitor stays denied',
   assert.strictEqual(C.decide({ gdprApplies: false }, GRANT, C.usNow(2, 2)).analytics_storage, 'granted');
   assert.deepStrictEqual(C.decide({ gdprApplies: false }, GRANT, C.usNow(2, 3)), denied);
 });
+test('GPP: a later opt-out (3) always wins, even over an initial DOES_NOT_APPLY (1)', () => {
+  assert.strictEqual(C.usNow(1, 3), 3);
+  assert.strictEqual(C.usNow(0, 3), 3);
+  assert.strictEqual(C.usNow(1, 2), 1);
+  assert.deepStrictEqual(C.decide({ gdprApplies: false }, GRANT, C.usNow(1, 3)), denied);
+});
 
 /* ---------- local/test guard ---------- */
 test('localOrTest: localhost, 127.0.0.1, ::1, file: and ?stats_test=1', () => {

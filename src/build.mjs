@@ -27,7 +27,7 @@ function minify(js) {
 }
 const PRE = prestates();
 if (PRE.added) console.log('precomputed ' + PRE.added + ' generator states');
-const ENGINE_PARTS = ['core', 'flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted', 'draw', 'play']
+const ENGINE_PARTS = ['core', 'flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted', 'draw', 'saves', 'play']
   .map((f) => minify(readFileSync(join(ROOT, 'src/js', f + '.js'), 'utf8')));
 ENGINE_PARTS.splice(1, 0, 'DLG.core.setPre(' + JSON.stringify(PRE.data) + ');');
 const ENGINE = ENGINE_PARTS.join('\n');

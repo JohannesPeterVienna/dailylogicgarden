@@ -5,7 +5,7 @@
  */
 (function () {
   'use strict';
-  var D = window.DLG, core = D.core, draw = D.draw;
+  var D = window.DLG, core = D.core, draw = D.draw, saves = D.saves;
   var META = {
     flowerbeds: { name: 'Flower Beds', path: '/flower-beds/', plant: 'a daisy' },
     tents: { name: 'Tents & Trees', path: '/tents-and-trees/', plant: 'a fir' },
@@ -23,22 +23,18 @@
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
   };
   var GARDEN_KEY = 'dlg:garden';
-  function garden() { var g = store.get(GARDEN_KEY, null); return g && g.plants ? g : { v: 1, plants: [] }; }
+  // the stored garden, checked entry by entry: a corrupt store gives an empty garden, bad entries are skipped
+  function garden() { return saves.cleanGarden(store.get(GARDEN_KEY, null), LAUNCH, today()); }
   function plant(type, level, key, hints, secs) {
-    var g = garden();
-    if (g.plants.some(function (p) { return p.type === type && p.level === level && p.key === key; })) return false;
-    g.plants.push({ type: type, level: level, key: key, hints: hints, secs: secs, at: new Date().toISOString().slice(0, 10) });
-    store.set(GARDEN_KEY, g);
+    var r = saves.mergeImport(garden(), { plants: [{ type: type, level: level, key: key, hints: Math.min(saves.MAX_HINTS, Math.max(0, hints | 0)), secs: Math.min(saves.MAX_SECS, Math.max(0, Math.round(+secs || 0))), at: today() }] }, LAUNCH, today());
+    if (!r.added) return false;
+    store.set(GARDEN_KEY, r.garden);
     return true;
   }
   function solvedSet() { var m = {}; garden().plants.forEach(function (p) { m[p.type + '|' + p.level + '|' + p.key] = 1; }); return m; }
 
   function today() { return core.dateKey(new Date()); }
-  function query() {
-    var q = {};
-    location.search.replace(/^\?/, '').split('&').forEach(function (kv) { var a = kv.split('='); if (a[0]) q[decodeURIComponent(a[0])] = decodeURIComponent(a[1] || ''); });
-    return q;
-  }
+  function query() { return saves.parseQuery(location.search); } // badly encoded values are ignored
   function validDate(key) {
     if (!core.parseKey(key)) return null;
     var t = today();
@@ -122,10 +118,11 @@
     setTimeout(function () {
       try { self.p = self.mod.generate(self.key, self.level); }
       catch (e) { self.stage.innerHTML = '<p class="loading">This puzzle could not be grown. Please try another level.</p>'; return; }
-      var saved = store.get(self.saveKey(), null);
-      self.user = saved && saved.u ? self.restore(saved.u) : self.blank();
-      self.hints = saved ? saved.h || 0 : 0;
-      self.secs = saved ? saved.t || 0 : 0;
+      // a saved board is used only if it fits this puzzle exactly; otherwise the board starts fresh
+      var saved = saves.cleanSave(self.type, self.p, self.mod, store.get(self.saveKey(), null));
+      self.user = saved ? self.restore(saved.u) : self.blank();
+      self.hints = saved ? saved.h : 0;
+      self.secs = saved ? saved.t : 0;
       self.done = !!(saved && saved.s);
       self.history = [];
       self.hint = null;
@@ -145,7 +142,7 @@
   };
   G.restore = function (u) { return this.type === 'gardenpath' ? { path: u.path.slice(), pencil: u.pencil || {} } : u.slice(); };
   G.snapshot = function () { return this.type === 'gardenpath' ? { path: this.user.path.slice(), pencil: JSON.parse(JSON.stringify(this.user.pencil)) } : this.user.slice(); };
-  G.save = function () { store.set(this.saveKey(), { u: this.user, h: this.hints, t: Math.round(this.secs), s: this.done }); };
+  G.save = function () { store.set(this.saveKey(), { u: this.user, h: Math.min(saves.MAX_HINTS, this.hints), t: Math.min(saves.MAX_SECS, Math.round(this.secs)), s: this.done }); };
   G.tick = function () {
     if (!this.p || this.done) { this.lastTick = Date.now(); return; }
     var now = Date.now();
@@ -721,7 +718,7 @@
   function bindGardenTools(root) {
     var exp = root.querySelector('[data-export]'), imp = root.querySelector('[data-import]');
     if (exp) exp.addEventListener('click', function () {
-      var blob = new Blob([JSON.stringify(garden(), null, 1)], { type: 'application/json' });
+      var blob = new Blob([JSON.stringify(garden(), null, 1)], { type: 'application/json' }); // cleaned, no duplicates
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob); a.download = 'daily-logic-garden-' + today() + '.json';
       document.body.appendChild(a); a.click(); a.remove();
@@ -729,18 +726,13 @@
     if (imp) imp.addEventListener('change', function () {
       var f = imp.files && imp.files[0], out = root.querySelector('[data-import-msg]');
       if (!f) return;
+      if (f.size > saves.MAX_IMPORT_BYTES) { if (out) out.textContent = 'That file is too large for a Daily Logic Garden export.'; imp.value = ''; return; }
       f.text().then(function (txt) {
-        var data = JSON.parse(txt);
-        if (!data || !Array.isArray(data.plants)) throw new Error('format');
-        var g = garden(), have = solvedSet(), added = 0;
-        data.plants.forEach(function (p) {
-          if (TYPES.indexOf(p.type) < 0 || core.LEVELS.indexOf(p.level) < 0 || !core.parseKey(p.key)) return;
-          if (have[p.type + '|' + p.level + '|' + p.key]) return;
-          g.plants.push({ type: p.type, level: p.level, key: p.key, hints: +p.hints || 0, secs: +p.secs || 0, at: String(p.at || '').slice(0, 10) });
-          added++;
-        });
-        store.set(GARDEN_KEY, g);
-        if (out) out.textContent = 'Imported ' + core.plural(added, 'plant') + '.';
+        // every entry is checked (type, level, day from launch to today, finite counts) and added once
+        var r = saves.mergeImport(garden(), JSON.parse(txt), LAUNCH, today());
+        store.set(GARDEN_KEY, r.garden);
+        if (out) out.textContent = 'Imported ' + core.plural(r.added, 'plant') + '.' + (r.skipped ? ' ' + core.plural(r.skipped, 'entry', 'entries') + ' skipped (already in your garden or not valid).' : '');
+        imp.value = '';
         root.querySelectorAll('[data-garden]').forEach(renderGarden);
       }).catch(function () { if (out) out.textContent = 'That file is not a Daily Logic Garden export.'; });
     });

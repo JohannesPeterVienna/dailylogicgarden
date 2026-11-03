@@ -2035,9 +2035,133 @@ return s + '</svg>';
 }
 return { ICON: ICON, printSheet: printSheet, RULES: RULES, gardenSVG: gardenSVG, plantSVG: plantSVG, KIND: KIND, season: season, PRINT_PAT: PRINT_PAT, edgeCells: edgeCells };
 });
+(function (root, factory) {
+var api = factory();
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+else (root.DLG = root.DLG || {}).saves = api;
+})(this, function () {
+'use strict';
+var TYPES = ['flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted'];
+var LEVELS = ['sprout', 'bloom', 'grove'];
+var MAX_HINTS = 10000;            // more hints than any board has cells
+var MAX_SECS = 7 * 24 * 3600;     // a week of play time on one board
+var MAX_PLANTS = 50000;           // garden entries kept / accepted in one import
+var MAX_IMPORT_BYTES = 2 * 1024 * 1024;
+var DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+function plainObject(o) { return !!o && typeof o === 'object' && Object.prototype.toString.call(o) === '[object Object]'; }
+function intIn(v, min, max) { return typeof v === 'number' && isFinite(v) && Math.floor(v) === v && v >= min && v <= max; }
+function realDay(key) {
+var m = typeof key === 'string' && DAY.exec(key);
+if (!m) return false;
+var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+}
+function dayInRange(key, launch, today) { return realDay(key) && key >= launch && key <= today; }
+function cellsOk(u, len, ok) {
+if (!Array.isArray(u) || u.length !== len) return null;
+for (var k = 0; k < len; k++) if (!ok(u[k], k)) return null;
+return u.slice();
+}
+function small(v) { return v === 0 || v === 1 || v === 2; }
+function cleanBoard(type, p, mod, u) {
+try {
+if (type === 'flowerbeds') return cellsOk(u, p.n * p.n, small);
+if (type === 'whoplanted') return cellsOk(u, mod.geom(p).size, small);
+if (type === 'tents') {
+var tg = mod.geom(p);
+return cellsOk(u, p.n * p.n, function (v, k) { return tg.isTree[k] ? v === 3 : small(v); });
+}
+if (type === 'sunshade') return cellsOk(u, p.n * p.n, function (v, k) { return p.givens[k] ? v === p.givens[k] : small(v); });
+if (type === 'gardenpath') {
+if (!plainObject(u) || !Array.isArray(u.path) || !u.path.length || u.path.length > p.n * p.n) return null;
+var g = mod.geom(p), seen = {}, hedges = {};
+(p.hedges || []).forEach(function (e) { hedges[e] = 1; });
+if (u.path[0] !== p.solution[0]) return null;
+for (var i = 0; i < u.path.length; i++) {
+var c = u.path[i];
+if (!intIn(c, 0, p.n * p.n - 1) || seen[c]) return null;
+seen[c] = 1;
+if (i) {
+var e = g.edgeAt[u.path[i - 1] + ',' + c];
+if (e === undefined || hedges[e]) return null; // not a neighbour, or through a hedge
+}
+}
+var pencil = {};
+if (u.pencil !== undefined && !plainObject(u.pencil)) return null;
+Object.keys(u.pencil || {}).forEach(function (key) {
+if (/^\d+$/.test(key) && +key < g.edges.length && small(u.pencil[key])) pencil[key] = u.pencil[key];
+});
+return { path: u.path.slice(), pencil: pencil };
+}
+} catch (err) { return null; }
+return null;
+}
+function cleanSave(type, p, mod, saved) {
+if (!plainObject(saved)) return null;
+var u = cleanBoard(type, p, mod, saved.u);
+if (!u) return null;
+return {
+u: u,
+h: intIn(saved.h, 0, MAX_HINTS) ? saved.h : 0,
+t: typeof saved.t === 'number' && isFinite(saved.t) && saved.t >= 0 && saved.t <= MAX_SECS ? saved.t : 0,
+s: saved.s === true
+};
+}
+function cleanPlant(p, launch, today) {
+if (!plainObject(p) || TYPES.indexOf(p.type) < 0 || LEVELS.indexOf(p.level) < 0 || !dayInRange(p.key, launch, today)) return null;
+if (!intIn(p.hints, 0, MAX_HINTS)) return null;
+if (typeof p.secs !== 'number' || !isFinite(p.secs) || p.secs < 0 || p.secs > MAX_SECS) return null;
+var at = typeof p.at === 'string' ? p.at.slice(0, 10) : '';
+return { type: p.type, level: p.level, key: p.key, hints: p.hints, secs: Math.round(p.secs), at: dayInRange(at, launch, today) && at >= p.key ? at : p.key };
+}
+function plantId(p) { return p.type + '|' + p.level + '|' + p.key; }
+function cleanGarden(raw, launch, today) {
+var out = { v: 1, plants: [] }, have = {};
+if (!plainObject(raw) || !Array.isArray(raw.plants)) return out;
+for (var i = 0; i < raw.plants.length && out.plants.length < MAX_PLANTS; i++) {
+var p = cleanPlant(raw.plants[i], launch, today);
+if (!p || have[plantId(p)]) continue;
+have[plantId(p)] = 1;
+out.plants.push(p);
+}
+return out;
+}
+function mergeImport(existing, data, launch, today) {
+if (!plainObject(data) || !Array.isArray(data.plants)) throw new Error('format');
+if (data.plants.length > MAX_PLANTS) throw new Error('too-large');
+var g = cleanGarden(existing, launch, today), have = {}, added = 0, skipped = 0;
+g.plants.forEach(function (p) { have[plantId(p)] = 1; });
+data.plants.forEach(function (raw) {
+var p = cleanPlant(raw, launch, today);
+if (!p || have[plantId(p)] || g.plants.length >= MAX_PLANTS) { skipped++; return; }
+have[plantId(p)] = 1;
+g.plants.push(p);
+added++;
+});
+return { garden: g, added: added, skipped: skipped };
+}
+function parseQuery(search) {
+var q = {};
+String(search || '').replace(/^\?/, '').split('&').forEach(function (kv) {
+if (!kv) return;
+var i = kv.indexOf('='), k, v;
+try {
+k = decodeURIComponent((i < 0 ? kv : kv.slice(0, i)).replace(/\+/g, ' '));
+v = decodeURIComponent((i < 0 ? '' : kv.slice(i + 1)).replace(/\+/g, ' '));
+} catch (e) { return; }
+if (k === 'date' || k === 'level') q[k] = v;
+});
+return q;
+}
+return {
+TYPES: TYPES, LEVELS: LEVELS, MAX_HINTS: MAX_HINTS, MAX_SECS: MAX_SECS, MAX_PLANTS: MAX_PLANTS, MAX_IMPORT_BYTES: MAX_IMPORT_BYTES,
+dayInRange: dayInRange, cleanBoard: cleanBoard, cleanSave: cleanSave, cleanPlant: cleanPlant,
+cleanGarden: cleanGarden, mergeImport: mergeImport, parseQuery: parseQuery
+};
+});
 (function () {
 'use strict';
-var D = window.DLG, core = D.core, draw = D.draw;
+var D = window.DLG, core = D.core, draw = D.draw, saves = D.saves;
 var META = {
 flowerbeds: { name: 'Flower Beds', path: '/flower-beds/', plant: 'a daisy' },
 tents: { name: 'Tents & Trees', path: '/tents-and-trees/', plant: 'a fir' },
@@ -2053,21 +2177,16 @@ get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.pa
 set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
 };
 var GARDEN_KEY = 'dlg:garden';
-function garden() { var g = store.get(GARDEN_KEY, null); return g && g.plants ? g : { v: 1, plants: [] }; }
+function garden() { return saves.cleanGarden(store.get(GARDEN_KEY, null), LAUNCH, today()); }
 function plant(type, level, key, hints, secs) {
-var g = garden();
-if (g.plants.some(function (p) { return p.type === type && p.level === level && p.key === key; })) return false;
-g.plants.push({ type: type, level: level, key: key, hints: hints, secs: secs, at: new Date().toISOString().slice(0, 10) });
-store.set(GARDEN_KEY, g);
+var r = saves.mergeImport(garden(), { plants: [{ type: type, level: level, key: key, hints: Math.min(saves.MAX_HINTS, Math.max(0, hints | 0)), secs: Math.min(saves.MAX_SECS, Math.max(0, Math.round(+secs || 0))), at: today() }] }, LAUNCH, today());
+if (!r.added) return false;
+store.set(GARDEN_KEY, r.garden);
 return true;
 }
 function solvedSet() { var m = {}; garden().plants.forEach(function (p) { m[p.type + '|' + p.level + '|' + p.key] = 1; }); return m; }
 function today() { return core.dateKey(new Date()); }
-function query() {
-var q = {};
-location.search.replace(/^\?/, '').split('&').forEach(function (kv) { var a = kv.split('='); if (a[0]) q[decodeURIComponent(a[0])] = decodeURIComponent(a[1] || ''); });
-return q;
-}
+function query() { return saves.parseQuery(location.search); } // badly encoded values are ignored
 function validDate(key) {
 if (!core.parseKey(key)) return null;
 var t = today();
@@ -2147,10 +2266,10 @@ this.hintEl.hidden = true; this.solvedEl.hidden = true;
 setTimeout(function () {
 try { self.p = self.mod.generate(self.key, self.level); }
 catch (e) { self.stage.innerHTML = '<p class="loading">This puzzle could not be grown. Please try another level.</p>'; return; }
-var saved = store.get(self.saveKey(), null);
-self.user = saved && saved.u ? self.restore(saved.u) : self.blank();
-self.hints = saved ? saved.h || 0 : 0;
-self.secs = saved ? saved.t || 0 : 0;
+var saved = saves.cleanSave(self.type, self.p, self.mod, store.get(self.saveKey(), null));
+self.user = saved ? self.restore(saved.u) : self.blank();
+self.hints = saved ? saved.h : 0;
+self.secs = saved ? saved.t : 0;
 self.done = !!(saved && saved.s);
 self.history = [];
 self.hint = null;
@@ -2170,7 +2289,7 @@ return new Array(p.n * p.n).fill(0);
 };
 G.restore = function (u) { return this.type === 'gardenpath' ? { path: u.path.slice(), pencil: u.pencil || {} } : u.slice(); };
 G.snapshot = function () { return this.type === 'gardenpath' ? { path: this.user.path.slice(), pencil: JSON.parse(JSON.stringify(this.user.pencil)) } : this.user.slice(); };
-G.save = function () { store.set(this.saveKey(), { u: this.user, h: this.hints, t: Math.round(this.secs), s: this.done }); };
+G.save = function () { store.set(this.saveKey(), { u: this.user, h: Math.min(saves.MAX_HINTS, this.hints), t: Math.min(saves.MAX_SECS, Math.round(this.secs)), s: this.done }); };
 G.tick = function () {
 if (!this.p || this.done) { this.lastTick = Date.now(); return; }
 var now = Date.now();
@@ -2728,7 +2847,7 @@ if (meta) meta.innerHTML = gd.plants.length ? '<span>' + core.plural(gd.plants.l
 function bindGardenTools(root) {
 var exp = root.querySelector('[data-export]'), imp = root.querySelector('[data-import]');
 if (exp) exp.addEventListener('click', function () {
-var blob = new Blob([JSON.stringify(garden(), null, 1)], { type: 'application/json' });
+var blob = new Blob([JSON.stringify(garden(), null, 1)], { type: 'application/json' }); // cleaned, no duplicates
 var a = document.createElement('a');
 a.href = URL.createObjectURL(blob); a.download = 'daily-logic-garden-' + today() + '.json';
 document.body.appendChild(a); a.click(); a.remove();
@@ -2736,18 +2855,12 @@ document.body.appendChild(a); a.click(); a.remove();
 if (imp) imp.addEventListener('change', function () {
 var f = imp.files && imp.files[0], out = root.querySelector('[data-import-msg]');
 if (!f) return;
+if (f.size > saves.MAX_IMPORT_BYTES) { if (out) out.textContent = 'That file is too large for a Daily Logic Garden export.'; imp.value = ''; return; }
 f.text().then(function (txt) {
-var data = JSON.parse(txt);
-if (!data || !Array.isArray(data.plants)) throw new Error('format');
-var g = garden(), have = solvedSet(), added = 0;
-data.plants.forEach(function (p) {
-if (TYPES.indexOf(p.type) < 0 || core.LEVELS.indexOf(p.level) < 0 || !core.parseKey(p.key)) return;
-if (have[p.type + '|' + p.level + '|' + p.key]) return;
-g.plants.push({ type: p.type, level: p.level, key: p.key, hints: +p.hints || 0, secs: +p.secs || 0, at: String(p.at || '').slice(0, 10) });
-added++;
-});
-store.set(GARDEN_KEY, g);
-if (out) out.textContent = 'Imported ' + core.plural(added, 'plant') + '.';
+var r = saves.mergeImport(garden(), JSON.parse(txt), LAUNCH, today());
+store.set(GARDEN_KEY, r.garden);
+if (out) out.textContent = 'Imported ' + core.plural(r.added, 'plant') + '.' + (r.skipped ? ' ' + core.plural(r.skipped, 'entry', 'entries') + ' skipped (already in your garden or not valid).' : '');
+imp.value = '';
 root.querySelectorAll('[data-garden]').forEach(renderGarden);
 }).catch(function () { if (out) out.textContent = 'That file is not a Daily Logic Garden export.'; });
 });

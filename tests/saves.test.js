@@ -109,7 +109,7 @@ test('DL3: badly encoded address values are ignored, never thrown', () => {
 
 test('DL4: imports refuse negative/non-finite counts, future or pre-launch days and oversized files', () => {
   const bad = [plant({ hints: -1 }), plant({ secs: -1 }), plant({ secs: JSON.parse('1e999') }), plant({ secs: null }), plant({ hints: 1.5 }),
-    plant({ hints: S.MAX_HINTS + 1 }), plant({ secs: S.MAX_SECS + 1 }), plant({ key: '9999-12-31' }), plant({ key: '2026-11-21' }), plant({ key: '2026-11-01' }),
+    plant({ hints: S.MAX_HINTS + 1 }), plant({ secs: S.MAX_SECS + 1 }), plant({ key: '9999-12-31' }), plant({ key: '2026-11-22' }), plant({ key: '2026-11-01' }),
     plant({ key: '2026-02-30' }), plant({ type: 'sudoku' }), plant({ level: 'tree' }), plant({ hints: '2' })];
   const r = S.mergeImport({ v: 1, plants: [] }, { plants: bad }, L, T);
   assert.strictEqual(r.added, 0);
@@ -121,4 +121,28 @@ test('DL4: imports refuse negative/non-finite counts, future or pre-launch days 
   assert.throws(() => S.mergeImport({}, { plants: {} }, L, T), /format/);
   assert.throws(() => S.mergeImport({}, null, L, T), /format/);
   assert.ok(S.MAX_IMPORT_BYTES > 0 && S.MAX_IMPORT_BYTES <= 5 * 1024 * 1024);
+});
+
+test('stored garden: entries after today survive a clock set back; only the display hides them; imports allow today + 1 day', () => {
+  const stored = { v: 1, plants: [plant(), plant({ type: 'tents', key: '2026-11-25', at: '2026-11-25' }), plant({ type: 'sunshade', key: '2026-12-31', at: '2026-12-31' })] };
+  // clock set back to T (2026-11-20): reading the stored garden keeps everything
+  const g = S.cleanGarden(stored, L, T);
+  assert.strictEqual(g.plants.length, 3);
+  assert.deepStrictEqual(S.shownGarden(g, T).plants.map((p) => p.key), ['2026-11-10']);
+  // solving a puzzle writes the garden back: the later entries are still there
+  const after = S.mergeImport(stored, { plants: [plant({ level: 'bloom', key: T, at: T })] }, L, T);
+  assert.strictEqual(after.added, 1);
+  assert.deepStrictEqual(after.garden.plants.map((p) => p.key).sort(), ['2026-11-10', '2026-11-20', '2026-11-25', '2026-12-31']);
+  assert.strictEqual(after.garden.plants.find((p) => p.key === '2026-11-25').at, '2026-11-25');
+  // once the clock is right again, they are shown again
+  assert.strictEqual(S.shownGarden(after.garden, '2026-12-31').plants.length, 4);
+  // still dropped from the stored garden: invalid days and pre-launch days
+  assert.strictEqual(S.cleanGarden({ v: 1, plants: [plant({ key: '2026-02-30' }), plant({ key: '2026-11-01' })] }, L).plants.length, 0);
+  // imports stay strict: today + 1 day accepted (time zones), today + 2 days refused
+  assert.strictEqual(S.IMPORT_TOLERANCE_DAYS, 1);
+  assert.strictEqual(S.addDays('2026-12-31', 1), '2027-01-01');
+  const imp = S.mergeImport({ v: 1, plants: [] }, { plants: [plant({ key: '2026-11-21', at: '2026-11-21' }), plant({ key: '2026-11-22', at: '2026-11-22' })] }, L, T);
+  assert.strictEqual(imp.added, 1);
+  assert.strictEqual(imp.skipped, 1);
+  assert.strictEqual(imp.garden.plants[0].key, '2026-11-21');
 });

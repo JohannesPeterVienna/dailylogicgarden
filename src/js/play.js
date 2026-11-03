@@ -23,15 +23,17 @@
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
   };
   var GARDEN_KEY = 'dlg:garden';
-  // the stored garden, checked entry by entry: a corrupt store gives an empty garden, bad entries are skipped
-  function garden() { return saves.cleanGarden(store.get(GARDEN_KEY, null), LAUNCH, today()); }
+  // the stored garden, checked entry by entry: a corrupt store gives an empty garden, bad entries are skipped.
+  // Entries dated after today are kept (the device clock may have been set back); shownGarden() hides them.
+  function garden() { return saves.cleanGarden(store.get(GARDEN_KEY, null), LAUNCH); }
+  function shownGarden() { return saves.shownGarden(garden(), today()); }
   function plant(type, level, key, hints, secs) {
     var r = saves.mergeImport(garden(), { plants: [{ type: type, level: level, key: key, hints: Math.min(saves.MAX_HINTS, Math.max(0, hints | 0)), secs: Math.min(saves.MAX_SECS, Math.max(0, Math.round(+secs || 0))), at: today() }] }, LAUNCH, today());
     if (!r.added) return false;
     store.set(GARDEN_KEY, r.garden);
     return true;
   }
-  function solvedSet() { var m = {}; garden().plants.forEach(function (p) { m[p.type + '|' + p.level + '|' + p.key] = 1; }); return m; }
+  function solvedSet() { var m = {}; shownGarden().plants.forEach(function (p) { m[p.type + '|' + p.level + '|' + p.key] = 1; }); return m; }
 
   function today() { return core.dateKey(new Date()); }
   function query() { return saves.parseQuery(location.search); } // badly encoded values are ignored
@@ -707,7 +709,7 @@
 
   // ======================= garden, home, archive, printable =======================
   function renderGarden(box) {
-    var gd = garden(), month = new Date().getUTCMonth();
+    var gd = shownGarden(), month = new Date().getUTCMonth();
     var count = {};
     gd.plants.forEach(function (p) { count[p.type] = (count[p.type] || 0) + 1; });
     box.innerHTML = draw.gardenSVG(gd.plants, month, 'Your garden with ' + core.plural(gd.plants.length, 'plant'));
@@ -728,12 +730,12 @@
       if (!f) return;
       if (f.size > saves.MAX_IMPORT_BYTES) { if (out) out.textContent = 'That file is too large for a Daily Logic Garden export.'; imp.value = ''; return; }
       f.text().then(function (txt) {
-        // every entry is checked (type, level, day from launch to today, finite counts) and added once
+        // every entry is checked (type, level, day from launch to today plus one day, finite counts) and added once
         var r = saves.mergeImport(garden(), JSON.parse(txt), LAUNCH, today());
         store.set(GARDEN_KEY, r.garden);
         if (out) out.textContent = 'Imported ' + core.plural(r.added, 'plant') + '.' + (r.skipped ? ' ' + core.plural(r.skipped, 'entry', 'entries') + ' skipped (already in your garden or not valid).' : '');
         imp.value = '';
-        root.querySelectorAll('[data-garden]').forEach(renderGarden);
+        Array.prototype.forEach.call(document.querySelectorAll('[data-garden]'), renderGarden); // the garden sits outside the tools section
       }).catch(function () { if (out) out.textContent = 'That file is not a Daily Logic Garden export.'; });
     });
   }
@@ -766,7 +768,7 @@
     }
     box.innerHTML = html;
     var total = 0;
-    garden().plants.forEach(function (p) { if (p.key >= core.addDays(t, -(ARCHIVE_DAYS - 1))) total++; });
+    shownGarden().plants.forEach(function (p) { if (p.key >= core.addDays(t, -(ARCHIVE_DAYS - 1))) total++; });
     var sum = document.querySelector('[data-archive-sum]');
     var shown = box.querySelectorAll('.day').length;
     if (sum) sum.textContent = 'You have solved ' + total + ' of the ' + shown * 15 + ' puzzles listed here on this device.' + (shown < ARCHIVE_DAYS ? ' The archive starts on the launch day, November 2, 2026, and grows to 30 days.' : '');

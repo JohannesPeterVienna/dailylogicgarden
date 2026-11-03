@@ -78,6 +78,20 @@ const plant = (extra = {}) => ({ type: 'flowerbeds', level: 'sprout', key: TODAY
   await ctx.close();
 }
 
+// Clock set back: garden entries dated after today stay stored (hidden), imports allow at most today + 1 day
+{
+  const day = (n) => { const d = new Date(TODAY + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const later = plant({ type: 'tents', key: day(5), at: day(5) });
+  const { ctx, page, errors } = await open('/garden/', { 'dlg:garden': JSON.stringify({ v: 1, plants: [later] }) });
+  const shownBefore = await page.textContent('[data-garden-meta]');
+  const r = await importFile(page, { v: 1, plants: [plant(), plant({ level: 'bloom', key: day(1), at: day(1) }), plant({ level: 'grove', key: day(2), at: day(2) })] });
+  const keys = (r.plants || []).map((p) => p.key).sort();
+  const shownAfter = await page.textContent('[data-garden-meta]');
+  check(!errors.length && /Solve any puzzle/.test(shownBefore) && /Imported 2 plants/.test(r.msg) && keys.join() === [TODAY, day(1), day(5)].join() && /^1 plant\b/.test(shownAfter),
+    `clock set back: later entry kept after write-back (${keys.join(', ')}), only today's shown (${shownAfter.slice(0, 40)}), import ${r.msg}`);
+  await ctx.close();
+}
+
 // DL2: corrupt garden and corrupt board saves do not break the page; other valid saves stay
 {
   const { ctx, errors } = await open('/garden/', { 'dlg:garden': '{"v":1,"plants":{}}' });

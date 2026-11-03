@@ -1,4 +1,4 @@
-/* Daily Logic Garden – puzzle engine and player (built 20261103b) */
+/* Daily Logic Garden – puzzle engine and player (built 20261103c) */
 (function (root, factory) {
 var api = factory();
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
@@ -2057,6 +2057,12 @@ var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
 return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
 }
 function dayInRange(key, launch, today) { return realDay(key) && key >= launch && key <= today; }
+function dayFrom(key, launch, latest) { return realDay(key) && key >= launch && (latest === null || key <= latest); }
+function addDays(key, n) {
+var m = DAY.exec(key), d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + n));
+return d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + d.getUTCDate()).slice(-2);
+}
+var IMPORT_TOLERANCE_DAYS = 1;
 function cellsOk(u, len, ok) {
 if (!Array.isArray(u) || u.length !== len) return null;
 for (var k = 0; k < len; k++) if (!ok(u[k], k)) return null;
@@ -2107,32 +2113,37 @@ t: typeof saved.t === 'number' && isFinite(saved.t) && saved.t >= 0 && saved.t <
 s: saved.s === true
 };
 }
-function cleanPlant(p, launch, today) {
-if (!plainObject(p) || TYPES.indexOf(p.type) < 0 || LEVELS.indexOf(p.level) < 0 || !dayInRange(p.key, launch, today)) return null;
+function cleanPlant(p, launch, latest) {
+if (latest === undefined) latest = null;
+if (!plainObject(p) || TYPES.indexOf(p.type) < 0 || LEVELS.indexOf(p.level) < 0 || !dayFrom(p.key, launch, latest)) return null;
 if (!intIn(p.hints, 0, MAX_HINTS)) return null;
 if (typeof p.secs !== 'number' || !isFinite(p.secs) || p.secs < 0 || p.secs > MAX_SECS) return null;
 var at = typeof p.at === 'string' ? p.at.slice(0, 10) : '';
-return { type: p.type, level: p.level, key: p.key, hints: p.hints, secs: Math.round(p.secs), at: dayInRange(at, launch, today) && at >= p.key ? at : p.key };
+return { type: p.type, level: p.level, key: p.key, hints: p.hints, secs: Math.round(p.secs), at: dayFrom(at, launch, latest) && at >= p.key ? at : p.key };
 }
 function plantId(p) { return p.type + '|' + p.level + '|' + p.key; }
-function cleanGarden(raw, launch, today) {
+function cleanGarden(raw, launch) {
 var out = { v: 1, plants: [] }, have = {};
 if (!plainObject(raw) || !Array.isArray(raw.plants)) return out;
 for (var i = 0; i < raw.plants.length && out.plants.length < MAX_PLANTS; i++) {
-var p = cleanPlant(raw.plants[i], launch, today);
+var p = cleanPlant(raw.plants[i], launch, null);
 if (!p || have[plantId(p)]) continue;
 have[plantId(p)] = 1;
 out.plants.push(p);
 }
 return out;
 }
+function shownGarden(g, today) {
+return { v: 1, plants: g.plants.filter(function (p) { return p.key <= today; }) };
+}
 function mergeImport(existing, data, launch, today) {
 if (!plainObject(data) || !Array.isArray(data.plants)) throw new Error('format');
 if (data.plants.length > MAX_PLANTS) throw new Error('too-large');
-var g = cleanGarden(existing, launch, today), have = {}, added = 0, skipped = 0;
+var latest = addDays(today, IMPORT_TOLERANCE_DAYS);
+var g = cleanGarden(existing, launch), have = {}, added = 0, skipped = 0;
 g.plants.forEach(function (p) { have[plantId(p)] = 1; });
 data.plants.forEach(function (raw) {
-var p = cleanPlant(raw, launch, today);
+var p = cleanPlant(raw, launch, latest);
 if (!p || have[plantId(p)] || g.plants.length >= MAX_PLANTS) { skipped++; return; }
 have[plantId(p)] = 1;
 g.plants.push(p);
@@ -2155,8 +2166,9 @@ return q;
 }
 return {
 TYPES: TYPES, LEVELS: LEVELS, MAX_HINTS: MAX_HINTS, MAX_SECS: MAX_SECS, MAX_PLANTS: MAX_PLANTS, MAX_IMPORT_BYTES: MAX_IMPORT_BYTES,
-dayInRange: dayInRange, cleanBoard: cleanBoard, cleanSave: cleanSave, cleanPlant: cleanPlant,
-cleanGarden: cleanGarden, mergeImport: mergeImport, parseQuery: parseQuery
+IMPORT_TOLERANCE_DAYS: IMPORT_TOLERANCE_DAYS,
+dayInRange: dayInRange, addDays: addDays, cleanBoard: cleanBoard, cleanSave: cleanSave, cleanPlant: cleanPlant,
+cleanGarden: cleanGarden, shownGarden: shownGarden, mergeImport: mergeImport, parseQuery: parseQuery
 };
 });
 (function () {
@@ -2177,14 +2189,15 @@ get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.pa
 set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
 };
 var GARDEN_KEY = 'dlg:garden';
-function garden() { return saves.cleanGarden(store.get(GARDEN_KEY, null), LAUNCH, today()); }
+function garden() { return saves.cleanGarden(store.get(GARDEN_KEY, null), LAUNCH); }
+function shownGarden() { return saves.shownGarden(garden(), today()); }
 function plant(type, level, key, hints, secs) {
 var r = saves.mergeImport(garden(), { plants: [{ type: type, level: level, key: key, hints: Math.min(saves.MAX_HINTS, Math.max(0, hints | 0)), secs: Math.min(saves.MAX_SECS, Math.max(0, Math.round(+secs || 0))), at: today() }] }, LAUNCH, today());
 if (!r.added) return false;
 store.set(GARDEN_KEY, r.garden);
 return true;
 }
-function solvedSet() { var m = {}; garden().plants.forEach(function (p) { m[p.type + '|' + p.level + '|' + p.key] = 1; }); return m; }
+function solvedSet() { var m = {}; shownGarden().plants.forEach(function (p) { m[p.type + '|' + p.level + '|' + p.key] = 1; }); return m; }
 function today() { return core.dateKey(new Date()); }
 function query() { return saves.parseQuery(location.search); } // badly encoded values are ignored
 function validDate(key) {
@@ -2836,7 +2849,7 @@ void self;
 }
 };
 function renderGarden(box) {
-var gd = garden(), month = new Date().getUTCMonth();
+var gd = shownGarden(), month = new Date().getUTCMonth();
 var count = {};
 gd.plants.forEach(function (p) { count[p.type] = (count[p.type] || 0) + 1; });
 box.innerHTML = draw.gardenSVG(gd.plants, month, 'Your garden with ' + core.plural(gd.plants.length, 'plant'));
@@ -2861,7 +2874,7 @@ var r = saves.mergeImport(garden(), JSON.parse(txt), LAUNCH, today());
 store.set(GARDEN_KEY, r.garden);
 if (out) out.textContent = 'Imported ' + core.plural(r.added, 'plant') + '.' + (r.skipped ? ' ' + core.plural(r.skipped, 'entry', 'entries') + ' skipped (already in your garden or not valid).' : '');
 imp.value = '';
-root.querySelectorAll('[data-garden]').forEach(renderGarden);
+Array.prototype.forEach.call(document.querySelectorAll('[data-garden]'), renderGarden); // the garden sits outside the tools section
 }).catch(function () { if (out) out.textContent = 'That file is not a Daily Logic Garden export.'; });
 });
 }
@@ -2894,7 +2907,7 @@ html += '</ul></section>';
 }
 box.innerHTML = html;
 var total = 0;
-garden().plants.forEach(function (p) { if (p.key >= core.addDays(t, -(ARCHIVE_DAYS - 1))) total++; });
+shownGarden().plants.forEach(function (p) { if (p.key >= core.addDays(t, -(ARCHIVE_DAYS - 1))) total++; });
 var sum = document.querySelector('[data-archive-sum]');
 var shown = box.querySelectorAll('.day').length;
 if (sum) sum.textContent = 'You have solved ' + total + ' of the ' + shown * 15 + ' puzzles listed here on this device.' + (shown < ARCHIVE_DAYS ? ' The archive starts on the launch day, November 2, 2026, and grows to 30 days.' : '');

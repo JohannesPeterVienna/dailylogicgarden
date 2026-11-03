@@ -16,8 +16,14 @@
   var html = document.documentElement;
   var adsAllowed = html.getAttribute('data-ads') === 'yes';
 
+  // window.DLG_NO_GOOGLE comes from the first inline script in <head> (local preview/test or ?stats_test=1)
+  var NO_GOOGLE = (function () {
+    if (window.DLG_NO_GOOGLE) return true;
+    try { return window.DLGConsent ? window.DLGConsent.localOrTest(location.hostname, location.protocol, location.search) : true; } catch (e) { return true; }
+  })();
+
   function adScript() {
-    if (document.querySelector('script[src*="adsbygoogle.js"]')) return;
+    if (NO_GOOGLE || document.querySelector('script[src*="adsbygoogle.js"]')) return;
     var s = document.createElement('script');
     s.async = true; s.crossOrigin = 'anonymous';
     s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + CLIENT;
@@ -42,9 +48,9 @@
   }
 
   var gtag = window.gtag || function () { (window.dataLayer = window.dataLayer || []).push(arguments); };
-  var seen = { tc: null, cmReady: false, us: null, sent: '' }, gaOn = false;
+  var seen = { tc: null, cmReady: false, us: null, gpp: null, gppOn: false, sent: '' }, gaOn = false;
   function startAnalytics() {
-    if (gaOn) return;
+    if (gaOn || NO_GOOGLE) return;
     gaOn = true;
     var s = document.createElement('script');
     s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
@@ -62,18 +68,31 @@
     var C = window.DLGConsent;
     if (!C) return;
     var cm = seen.cmReady && C.region(seen.tc) !== 'none' ? cmValues() : null;
-    var d = C.decide(seen.tc, cm, seen.us);
+    var d = C.decide(seen.tc, cm, C.usNow(seen.us, seen.gpp));
     var analytics = d.analytics_storage === 'granted';
     window['ga-disable-' + GA_ID] = !analytics;
     var sig = JSON.stringify(d);
     if (sig !== seen.sent) { seen.sent = sig; gtag('consent', 'update', d); }
     if (analytics) startAnalytics();
   }
+  // the current U.S. opt-out state, including later changes, comes from the GPP signal
+  function listenGpp() {
+    if (seen.gppOn || typeof window.__gpp !== 'function') return;
+    seen.gppOn = true;
+    try {
+      window.__gpp('addEventListener', function (evt, ok) {
+        if (!ok || !evt) return;
+        var ping = evt.pingData || (evt.data && evt.data.pingData) || null;
+        if (ping && window.DLGConsent) { seen.gpp = window.DLGConsent.usFromGpp(ping); update(); }
+      });
+    } catch (e) { seen.gppOn = false; seen.gpp = null; }
+  }
   function listen() {
     window.googlefc = window.googlefc || {};
     window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
     window.googlefc.callbackQueue.push({
       CONSENT_API_READY: function () {
+        listenGpp();
         if (typeof window.__tcfapi !== 'function') return;
         window.__tcfapi('addEventListener', 2, function (tc, ok) {
           seen.tc = ok ? tc : null;
@@ -87,6 +106,7 @@
           var u = window.googlefc.usstatesoptout;
           seen.us = u && typeof u.getInitialUsStatesOptOutStatus === 'function' ? u.getInitialUsStatesOptOutStatus() : null;
         } catch (e) { seen.us = null; }
+        listenGpp();
         update();
       }
     });
@@ -96,11 +116,22 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-privacy-settings]'), function (b) {
       b.addEventListener('click', function () {
         // treat it as a withdrawal right away; the CMP reports the new choice through the listeners
+        var before = { tc: seen.tc, cmReady: seen.cmReady };
         seen.tc = null; seen.cmReady = false; update();
         window.googlefc = window.googlefc || {};
         window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
         window.googlefc.callbackQueue.push(function () {
-          try { window.googlefc.showRevocationMessage(); } catch (e) { /* consent message not available here */ }
+          try {
+            // U.S. state law applies -> Google's U.S. opt-out dialog, otherwise the GDPR revocation message
+            window.DLGConsent.privacyChoice(window.googlefc, function (optedOut) {
+              try {
+                if (optedOut) seen.gpp = window.DLGConsent.US_OPTED_OUT; // ad personalization + analytics stay denied
+                else { seen.tc = before.tc; seen.cmReady = before.cmReady; }
+                listenGpp();
+              } catch (e) { seen.gpp = null; }
+              update();
+            });
+          } catch (e) { /* consent message not available here */ }
         });
         adScript();
       });

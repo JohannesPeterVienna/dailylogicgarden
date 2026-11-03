@@ -15,7 +15,7 @@ const REVIEWED = '2026-11-02';
 const REVIEWED_TEXT = 'November 2, 2026';
 const PUB = 'ca-pub-7811071715414905';
 const GA = 'G-T00HRG2YVF';
-const V = '20261102';
+const V = '20261103';
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const strip = (h) => h.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ');
@@ -32,7 +32,12 @@ const ENGINE_PARTS = ['core', 'flowerbeds', 'tents', 'sunshade', 'gardenpath', '
 ENGINE_PARTS.splice(1, 0, 'DLG.core.setPre(' + JSON.stringify(PRE.data) + ');');
 const ENGINE = ENGINE_PARTS.join('\n');
 const CONSENT_DEFAULTS = `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});gtag('set','ads_data_redaction',true);gtag('set','url_passthrough',false);window['ga-disable-${GA}']=true;</script>`;
-const ADSENSE = `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}" crossorigin="anonymous"></script>`;
+// First script in <head>: local preview/test (localhost, 127.0.0.1, ::1, file:) or ?stats_test=1 (kept for the
+// tab in sessionStorage) sets window.DLG_NO_GOOGLE – then no Google script (AdSense, its CMP, GA) is inserted.
+const GUARD = `<script>window.DLG_NO_GOOGLE=(function(l){var h=l.hostname,q=/[?&]stats_test=1(&|$)/.test(l.search),t=q;try{if(q)sessionStorage.setItem('dlg-stats-test','1');t=q||sessionStorage.getItem('dlg-stats-test')==='1';}catch(e){}return t||l.protocol==='file:'||h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='[::1]';})(location);</script>`;
+// AdSense loader where the static tag was (right after the consent defaults): async, crossorigin="anonymous".
+const ADS_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}`;
+const ADSENSE = `<script data-ads-loader>if(!window.DLG_NO_GOOGLE){(function(){var s=document.createElement('script');s.async=true;s.src='${ADS_SRC}';s.crossOrigin='anonymous';document.head.appendChild(s);})();}</script>`;
 
 const LOGO = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#23412F"/><path d="M20 31V17" stroke="#F1F4EC" stroke-width="2.4" stroke-linecap="round"/><path d="M20 22c-6 0-9-4-9-9 6 0 9 4 9 9zM20 19c0-6 4-9 9-9 0 6-4 9-9 9z" fill="#E3B23C"/><path d="M11 31h18" stroke="#F1F4EC" stroke-width="2" stroke-linecap="round"/></svg>`;
 const NAV = [['Today', '/'], ['Flower Beds', '/flower-beds/'], ['Tents & Trees', '/tents-and-trees/'], ['Sun & Shade', '/sun-and-shade/'], ['Garden Path', '/garden-path/'], ['Who Planted What', '/who-planted-what/'], ['Guides', '/guides/'], ['Archive', '/archive/'], ['My garden', '/garden/']];
@@ -66,6 +71,7 @@ function page({ path, title, description, body, ads = false, adsense = false, no
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${GUARD}
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 ${canonical ? `<link rel="canonical" href="${SITE}${canonical === true ? path : canonical}">` : ''}

@@ -25,7 +25,11 @@ const server = createServer((req, res) => {
 const BASE = 'http://127.0.0.1:' + server.address().port;
 const urls = [...readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<loc>https:\/\/dailylogicgarden\.com([^<]+)<\/loc>/g)].map((m) => m[1]).concat(['/garden/']);
 
-const browser = await chromium.launch();
+// stats.test maps to this local server but is not a local host name (for the ?stats_test=1 check)
+const browser = await chromium.launch({ args: ['--host-resolver-rules=MAP stats.test 127.0.0.1'] });
+// every request to a Google domain is recorded – on localhost/127.0.0.1 and with ?stats_test=1 there must be none
+const GOOGLE = /^https?:\/\/([^/]*\.)?(google|googlesyndication|googletagmanager|googleadservices|doubleclick|gstatic|google-analytics)\.[a-z.]+\//;
+const googleRequests = [];
 let fails = 0, minAd = Infinity, minAdWhere = '', printPages = 0, lgFit = null;
 const fail = (m) => { fails++; console.error('FAIL', m); };
 
@@ -43,6 +47,7 @@ async function solveWithHints(page, label) {
 
 for (const width of [390, 1366]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+  ctx.on('request', (r) => { if (GOOGLE.test(r.url())) googleRequests.push(r.url()); });
   await ctx.route('**/*', (route) => (route.request().url().startsWith(BASE) ? route.continue() : route.abort()));
   for (const u of urls) {
     const page = await ctx.newPage();
@@ -142,6 +147,25 @@ for (const width of [390, 1366]) {
   }
   await ctx.close();
 }
+// localhost and ?stats_test=1 on a non-local host name: no Google script tag, no Google request
+{
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+  ctx.on('request', (r) => { if (GOOGLE.test(r.url())) googleRequests.push(r.url()); });
+  const port = server.address().port;
+  await ctx.route('**/*', (route) => (/^http:\/\/(127\.0\.0\.1|localhost|stats\.test):/.test(route.request().url()) ? route.continue() : route.abort()));
+  const page = await ctx.newPage();
+  for (const u of [`http://localhost:${port}/`, `http://localhost:${port}/flower-beds/`, `http://localhost:${port}/privacy/`, `http://stats.test:${port}/?stats_test=1`, `http://stats.test:${port}/guides/`]) {
+    await page.goto(u, { waitUntil: 'load' }); await page.waitForTimeout(250);
+    if (/privacy/.test(u)) { await page.click('main [data-privacy-settings]'); await page.waitForTimeout(150); }
+    const flag = await page.evaluate(() => window.DLG_NO_GOOGLE);
+    const tags = await page.$$eval('script[src]', (ss) => ss.map((x) => x.src).filter((x) => /google/.test(x)));
+    if (flag !== true || tags.length) fail(`${u}: guard ${flag}, Google script tags ${tags.join(', ')}`);
+  }
+  await ctx.close();
+}
+if (googleRequests.length) fail('requests to Google domains: ' + [...new Set(googleRequests)].slice(0, 5).join(', '));
+else console.log('no request to any Google domain on localhost / 127.0.0.1 / ?stats_test=1');
+
 await browser.close();
 server.close();
 console.log(`print pack PDF pages: ${printPages}; logic grid on 390x800: ${JSON.stringify(lgFit)}`);

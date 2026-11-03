@@ -37,7 +37,7 @@ for (const url of sitemapUrls) {
   ok(!isLegal || (!h.includes('adsbygoogle.js') && !h.includes('class="ad"')), 'no ads on legal page ' + path);
   if (path === '/' ) ok(h.includes('adsbygoogle.js') && !h.includes('class="ad"'), 'home: loader but no slots');
   if (r && (r.kind === 'tool' || r.kind === 'guide')) {
-    ok(h.includes('adsbygoogle.js?client=ca-pub-7811071715414905" crossorigin="anonymous"'), 'adsense loader ' + path);
+    ok(h.includes("<script data-ads-loader>if(!window.DLG_NO_GOOGLE){") && h.includes("s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905';s.crossOrigin='anonymous'") && h.includes('s.async=true'), 'adsense loader ' + path);
     ok(/<table/.test(h) && /<figure><svg/.test(h), 'table and inline svg ' + path);
     ok(h.includes('Reviewed November 2, 2026'), 'reviewed line ' + path);
     ok(h.includes('"@type":"FAQPage"') && h.includes('"@type":"BreadcrumbList"') && h.includes('"dateModified":"2026-11-02"'), 'json-ld ' + path);
@@ -58,6 +58,12 @@ for (const f of all(DOCS).filter((x) => x.endsWith('.html'))) {
   const h = readFileSync(f, 'utf8'), rel = f.slice(DOCS.length);
   ok(h.includes('<meta name="google-adsense-account" content="ca-pub-7811071715414905">'), 'adsense meta ' + rel);
   const cd = h.indexOf("gtag('consent','default'"), firstGoogle = Math.min(...['adsbygoogle.js', 'googletagmanager'].map((s) => { const i = h.indexOf(s); return i < 0 ? Infinity : i; }));
+  // local/test guard is the first script; no static Google script tag; the loader sits directly after the consent defaults
+  const guardAt = h.indexOf('<script>window.DLG_NO_GOOGLE=');
+  const guard = guardAt >= 0 ? h.slice(guardAt, h.indexOf('</script>', guardAt)) : '';
+  ok(guardAt > 0 && h.search(/<script/) === guardAt && guardAt < cd && ['localhost', "'127.0.0.1'", "'::1'", "'file:'", 'stats_test=1'].every((k) => guard.includes(k)), 'local/test guard first ' + rel);
+  ok(!/<script[^>]+src="https:\/\/(pagead2|www\.googletagmanager)/.test(h), 'no static Google script tag ' + rel);
+  if (h.includes('data-ads-loader')) ok(/<script>window\.dataLayer[\s\S]*?<\/script>\n<script data-ads-loader>/.test(h), 'loader right after consent defaults ' + rel);
   ok(cd > 0 && cd < firstGoogle && h.includes('wait_for_update:500') && h.includes('ads_data_redaction') && h.includes("ga-disable-G-T00HRG2YVF']=true"), 'consent defaults first ' + rel);
   for (const m of h.matchAll(/href="(\/[^"]*)"/g)) {
     const target = m[1].replace(/&amp;/g, '&');

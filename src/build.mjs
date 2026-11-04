@@ -15,7 +15,7 @@ const REVIEWED = '2026-11-02';
 const REVIEWED_TEXT = 'November 2, 2026';
 const PUB = 'ca-pub-7811071715414905';
 const GA = 'G-T00HRG2YVF';
-const V = '20261104a';
+const V = '20261104b';
 // Pages whose content changed on 2026-11-04 (home and About texts, ad scope in the privacy policy): sitemap lastmod.
 const CHANGED_0411 = ['/', '/about/', '/privacy/'];
 

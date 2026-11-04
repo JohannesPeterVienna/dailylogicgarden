@@ -35,6 +35,7 @@ for (const url of sitemapUrls) {
   ok(r && r.words >= r.minWords, `words ${r && r.words} >= ${r && r.minWords} ${path}`);
   const isLegal = LEGAL.includes(path);
   ok(!isLegal || (!h.includes('adsbygoogle.js') && !h.includes('class="ad"')), 'no ads on legal page ' + path);
+  ok(isLegal || h.includes('<script data-ads-loader>'), 'AdSense loader on every indexable non-legal page ' + path);
   if (path === '/' ) ok(h.includes('adsbygoogle.js') && !h.includes('class="ad"'), 'home: loader but no slots');
   if (r && (r.kind === 'tool' || r.kind === 'guide')) {
     ok(h.includes("<script data-ads-loader>if(!window.DLG_NO_GOOGLE){") && h.includes("s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905';s.crossOrigin='anonymous'") && h.includes('s.async=true'), 'adsense loader ' + path);

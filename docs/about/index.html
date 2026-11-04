@@ -11,12 +11,12 @@
 
 <meta name="google-adsense-account" content="ca-pub-7811071715414905">
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});gtag('set','ads_data_redaction',true);gtag('set','url_passthrough',false);window['ga-disable-G-T00HRG2YVF']=true;</script>
-
+<script data-ads-loader>if(!window.DLG_NO_GOOGLE){(function(){var s=document.createElement('script');s.async=true;s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905';s.crossOrigin='anonymous';document.head.appendChild(s);})();}</script>
 <meta name="theme-color" content="#23412F">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261103d">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261104a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Daily Logic Garden">
 <meta property="og:title" content="About Daily Logic Garden – Method, Publisher and Limits">
@@ -29,30 +29,37 @@
 <main id="main"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><span aria-current="page">About</span></li></ol></nav><article class="prose"><span class="kicker">About &amp; method</span><h1>About Daily Logic Garden</h1><p class="lede">Daily Logic Garden publishes five daily logic puzzles with three levels each, plus guides on rules and solving technique. It is free, needs no account, and keeps your progress on your own device.</p>
 <h2 id="who">Who publishes the site</h2>
-<p>The site is published by AdStern, an advertising agency in Vienna, Austria (details in the <a href="/imprint/">imprint</a>). It is financed by advertising on puzzle and guide pages. No game publisher pays for mentions, and the guides contain no affiliate links. The site was rebuilt from scratch in November 2026; the previous version offered a small set of rotating nonogram boards, which are no longer published here.</p>
+<p>The site is published by AdStern (Johannes Peter), an advertising agency in Vienna, Austria (details in the <a href="/imprint/">imprint</a>). It is financed by advertising on the puzzle, guide and overview pages; the imprint, privacy policy and contact page carry no advertising. No game publisher pays for mentions, and the guides contain no affiliate links. The site was rebuilt from scratch in November 2026; the previous version offered a small set of rotating nonogram boards, which are no longer published here.</p>
 <h2 id="generator">How the puzzles are made</h2>
-<p>Each board is generated in your browser. The date in UTC, the puzzle type and the level form a seed for a deterministic random generator, so every device produces the same board on the same day. The generator proposes a layout – flower beds grown around a hidden solution, trees beside hidden tents, a full sun-and-shade grid, a random path through every square, a random assignment of gardeners – and then removes information (givens, stones, clues) as long as the puzzle stays solvable at its level.</p>
+<p>Each board is generated in your browser; there is no puzzle server. The date in UTC, the puzzle type and the level are joined into a seed text (for example &ldquo;g1|tents|bloom|2026-11-04&rdquo;), hashed to a number and fed into a small deterministic random generator. The same date therefore produces the same board on every device, and no board is stored or copied from anywhere. Each puzzle builds its board in its own way:</p>
+<ul><li><b>Flower Beds</b> (6 &times; 6, 7 &times; 7 or 8 &times; 8): the generator first places one hidden flower per row and column so that no two touch, then grows the beds outward from those flowers. If the beds allow a second solution, a square where that other solution would put a flower is handed to a neighboring bed – as long as every bed stays in one piece – and the count is repeated until only the hidden solution fits.</li>
+<li><b>Tents &amp; Trees</b> (6, 7 or 8 squares wide): about one square in five gets a hidden tent with a tree beside it, tents never touching each other. The row and column numbers are counted from that layout; a layout that does not meet the checks below is discarded and a new one is drawn.</li>
+<li><b>Sun &amp; Shade</b> (6, 8 or 10 squares wide): a complete valid grid is drawn first. Then the generator tries to remove every given symbol in random order and keeps a removal only if the board can still be solved with the techniques of its level.</li>
+<li><b>Garden Path</b> (5, 6 or 7 squares wide): a random path through every square is made by repeatedly bending a simple zigzag. Numbered stones are placed on it, more are added in the longest stretch without a stone until the logic solver can finish, and stones that turn out not to be needed are removed again. On Bloom and Grove boards some hedges block passages the path does not use.</li>
+<li><b>Who Planted What</b> (four gardeners): a hidden assignment of gardeners to crops and beds – and on Bloom and Grove also to days – is drawn. Clues that are true for that assignment are added until the solver can finish the grid; then every clue that is not needed is removed.</li></ul>
+<p>If an attempt fails any check, the generator moves on to the next attempt from the same seed. For the combinations that need the most attempts, the build stores the generator state of the successful attempt for the first 150 days after launch, so your browser can start there; it still runs every check below before the board is shown.</p>
 <h2 id="checks">How every board is checked</h2>
-<ul><li><b>Exactly one solution.</b> An exhaustive search, written separately from the logic solver, must find exactly one solution. (For 10 × 10 Sun &amp; Shade boards the browser uses a faster exhaustive search with line propagation; the automated tests additionally run the plain row-by-row search.)</li>
-<li><b>No guessing.</b> A solver that only uses a fixed list of human techniques must finish the board.</li>
-<li><b>Honest level.</b> The solver must need its level&rsquo;s technique, and must fail with the techniques of the level below.</li></ul>
-<p>Automated tests run these checks for 60 consecutive days for every puzzle and level, and they verify that following only the hints solves the board and that every hint agrees with the solution. The technique lists are described in the guides, for example <a href="/guides/star-battle-strategy/">Star Battle strategy</a>.</p>
+<ul><li><b>Exactly one solution.</b> An exhaustive search, written separately from the logic solver, counts the solutions and stops at the second one; the board is used only if it finds exactly one. (For Sun &amp; Shade the browser uses a faster exhaustive search with line propagation; the automated tests additionally run the plain row-by-row search.)</li>
+<li><b>No guessing.</b> A solver that only uses a fixed list of human techniques, ordered from simple to advanced, must finish the board.</li>
+<li><b>Honest level.</b> The hardest technique the solver needs must belong to the board&rsquo;s level, and the solver must fail when it is limited to the techniques of the level below.</li></ul>
+<p>The automated tests generate the boards for 60 consecutive days for every puzzle and level and repeat these checks with a separate count. They also follow only the Why? hints from an empty board for 20 days per level and check that this solves the board and that every hint agrees with the solution, and they test hints from random partly filled and wrong boards: a wrong mark must be reported before any new step. The technique lists are described in the guides, for example <a href="/guides/star-battle-strategy/">Star Battle strategy</a>.</p>
 <h2 id="content">How the guides are written and checked</h2>
-<p>Guides are written for this site. Numbers about our puzzles (board sizes, average steps, how often a technique was needed) come from running our generator on the 60 daily seeds from November 2 to December 31, 2026. Mathematical counts, such as the 34 valid rows of eight in a binary puzzle, were computed by our own code. Example boards in the figures are produced by the real generator when the site is built. Each page shows its review date; it changes when a page is checked again or corrected.</p>
+<p>Guides are written for this site with the help of AI tools and describe the techniques our solver actually uses. Before a guide is published, a separate review pass checks its statements against the solver code, the generator output and the sources it names; anything that cannot be confirmed is corrected or removed. That review consists of independent AI review passes and automated tests – there is no team of human editors behind the site. AdStern, the publisher, decides what is published and is responsible for it.</p>
+<p>Numbers about our puzzles (board sizes, average steps, how often a technique was needed) come from running our generator on the 60 daily seeds from November 2 to December 31, 2026. Mathematical counts, such as the 34 valid rows of eight in a binary puzzle, were computed by our own code. Example boards in the figures are produced by the real generator when the site is built. Each page shows its review date; it changes when a page is checked again or corrected.</p>
 <h2 id="limits">Limits</h2>
 <p>The difficulty levels reflect our solver&rsquo;s technique order; a human may find another route. The daily switch depends on your device clock. Progress stored in the browser is lost if you clear site data, unless you exported it. We describe genres by their common names only so people can find the rules; we are not affiliated with any other puzzle publisher or game.</p>
 <h2 id="corrections">Corrections</h2>
 <p>Confirmed errors in puzzles, hints or guides are fixed and listed here with their date. No corrections have been necessary since the launch on November 2, 2026.</p>
 <h2 id="privacy">Your data</h2>
-<p>Puzzle progress and your garden stay in your browser&rsquo;s local storage. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p><p class="reviewed">Last updated: November 2, 2026</p></article>
+<p>Puzzle progress and your garden stay in your browser&rsquo;s local storage. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p><p class="reviewed">Last updated: November 4, 2026</p></article>
 </div></main>
 <footer class="site"><div class="wrap"><div class="cols">
 <div><h2>Play</h2><ul><li><a href="/flower-beds/">Flower Beds</a></li><li><a href="/tents-and-trees/">Tents &amp; Trees</a></li><li><a href="/sun-and-shade/">Sun &amp; Shade</a></li><li><a href="/garden-path/">Garden Path</a></li><li><a href="/who-planted-what/">Who Planted What</a></li></ul></div>
 <div><h2>More</h2><ul><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
 <div><h2>About</h2><ul><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy policy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
 </div><p class="fine">Daily Logic Garden is published by AdStern, Vienna. Every puzzle is made by our own generator and checked for exactly one solution. Your progress stays in your browser.</p></div></footer>
-<script src="/assets/js/consent.js?v=20261103d" defer></script>
-<script src="/assets/js/site.js?v=20261103d" defer></script>
+<script src="/assets/js/consent.js?v=20261104a" defer></script>
+<script src="/assets/js/site.js?v=20261104a" defer></script>
 
 </body>
 </html>

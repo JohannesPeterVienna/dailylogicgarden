@@ -16,7 +16,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261103d">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261104a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Daily Logic Garden">
 <meta property="og:title" content="Daily Logic Garden – Today’s Five Logic Puzzles">
@@ -40,6 +40,14 @@
 <p>Every solved puzzle plants something in your personal garden: a daisy for Flower Beds, a fir for Tents &amp; Trees, a sunflower, a fern, a tulip. Grove plants grow taller than Sprout plants, and the garden changes with the seasons. There are no streaks: a missed day never wilts anything, and hints never cost you a plant. The garden is stored only in your browser; you can export it as a file and import it on another device on the <a href="/garden/">My garden</a> page.</p>
 <h2 id="fair">Fair by construction</h2>
 <p>All boards are created by our own generator from the date, so everyone in the world gets the same puzzles without accounts or servers. Before a board appears, an independent search confirms that it has exactly one solution, and our logic solver confirms that it can be solved at its level without trial and error. How that works is explained in <a href="/guides/fair-logic-puzzles-unique-solutions/">What makes a logic puzzle fair?</a> and on the <a href="/about/">About</a> page.</p>
+<h2 id="made">How today&rsquo;s boards are made</h2>
+<p>When you open a puzzle, your browser combines today&rsquo;s UTC date, the puzzle and the level into a seed and runs the generator for that board. The generator starts from a hidden solution – flowers placed so that none touch, tents beside trees, a full grid of suns and shades, a path through every square, an assignment of gardeners to crops – and builds the visible puzzle around it: beds grown around the flowers, row and column counts, the givens that are left after removing as many as possible, numbered stones, or a short list of clues.</p>
+<p>Then come three checks. A separate exhaustive search counts the solutions and stops at the second; only a board with exactly one is used. The logic solver, which knows only the techniques explained in our guides, must finish the board. And it must need the hardest technique of its level, while failing with the techniques of the level below – that is what makes a Bloom board a Bloom board. A board that fails any check is thrown away, and the generator tries again from the same seed, so the result is still the same on every device.</p>
+<h2 id="levels">Board sizes by level</h2>
+<p>Flower Beds and Tents &amp; Trees grow from 6 &times; 6 at Sprout to 7 &times; 7 at Bloom and 8 &times; 8 at Grove. Sun &amp; Shade uses 6 &times; 6, 8 &times; 8 and 10 &times; 10, because its rules need an even number of squares per line. Garden Path runs from 5 &times; 5 to 7 &times; 7 and adds a few hedges on Bloom and Grove. Who Planted What always has four gardeners; Sprout asks for crop and bed, Bloom and Grove add the day of the week.</p>
+<h2 id="hints">When you get stuck</h2>
+<p>Press <b>Why?</b> and the hint first checks your marks. If one of them contradicts the only solution, it points at that square and offers to clear it, so a mistake never sends you down a long wrong road. Otherwise it names the next deduction the solver would make, explains in a sentence why it holds, highlights the squares involved and lets you apply it. The number of hints is saved with the board, but hints never cost a plant. <b>Undo</b> takes back moves one at a time, and <b>Print</b> gives you the board on paper.</p>
+<p>Your moves on each board are saved in this browser as you play, so you can close the page and come back later the same day. Nothing is sent to a server, and there is nothing to sign up for.</p>
 <h2 id="more">More ways to play</h2>
 <p>Missed a day? The <a href="/archive/">archive</a> holds the last 30 days. Prefer paper? The <a href="/printable/">printable packs</a> put a week of boards on separate pages. Want to get better? Start with the <a href="/guides/">guides</a>: rules in a minute, strategy from easy to expert, and tips for comfortable play on any screen.</p></section>
 </div></main>
@@ -48,8 +56,8 @@
 <div><h2>More</h2><ul><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
 <div><h2>About</h2><ul><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy policy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
 </div><p class="fine">Daily Logic Garden is published by AdStern, Vienna. Every puzzle is made by our own generator and checked for exactly one solution. Your progress stays in your browser.</p></div></footer>
-<script src="/assets/js/consent.js?v=20261103d" defer></script>
-<script src="/assets/js/site.js?v=20261103d" defer></script>
-<script src="/assets/js/garden.js?v=20261103d" defer></script>
+<script src="/assets/js/consent.js?v=20261104a" defer></script>
+<script src="/assets/js/site.js?v=20261104a" defer></script>
+<script src="/assets/js/garden.js?v=20261104a" defer></script>
 </body>
 </html>

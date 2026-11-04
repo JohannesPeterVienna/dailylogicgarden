@@ -15,7 +15,9 @@ const REVIEWED = '2026-11-02';
 const REVIEWED_TEXT = 'November 2, 2026';
 const PUB = 'ca-pub-7811071715414905';
 const GA = 'G-T00HRG2YVF';
-const V = '20261103d';
+const V = '20261104a';
+// Pages whose content changed on 2026-11-04 (home and About texts, ad scope in the privacy policy): sitemap lastmod.
+const CHANGED_0411 = ['/', '/about/', '/privacy/'];
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const strip = (h) => h.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ');
@@ -156,15 +158,15 @@ ${reviewed}</article><aside class="side" aria-label="Advertisement">${adBox('sid
 }
 {
   const h = home();
-  addPage({ path: '/', title: h.title, description: h.description, body: h.html, ads: false, adsense: true, kind: 'home', minWords: 450, text: h.html,
+  addPage({ path: '/', title: h.title, description: h.description, body: h.html, ads: false, adsense: true, kind: 'home', minWords: 800, text: h.html,
     jsonld: [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Daily Logic Garden', url: SITE + '/', description: h.description, publisher: PUBLISHER, inLanguage: 'en-US' }], scripts: GAME_JS });
   const hub = guidesHub(GUIDES, TOOLS);
-  addPage({ path: '/guides/', title: hub.title, description: hub.description, body: crumbs([['Home', '/'], ['Guides', '/guides/']]) + hub.html, kind: 'hub', minWords: 220, text: hub.html, jsonld: [breadcrumbLd([['Home', '/'], ['Guides', '/guides/']])] });
+  addPage({ path: '/guides/', title: hub.title, description: hub.description, body: crumbs([['Home', '/'], ['Guides', '/guides/']]) + hub.html, kind: 'hub', adsense: true, minWords: 220, text: hub.html, jsonld: [breadcrumbLd([['Home', '/'], ['Guides', '/guides/']])] });
   const gp = gardenPage();
   addPage({ path: '/garden/', title: gp.title, description: gp.description, body: crumbs([['Home', '/'], ['My garden', '/garden/']]) + gp.html, noindex: true, kind: 'garden', text: gp.html, scripts: GAME_JS });
   for (const s of STATIC) {
     const list = [['Home', '/'], [s.crumb, s.path]];
-    addPage({ path: s.path, title: s.title, description: s.description, body: crumbs(list) + s.html, kind: s.kind || 'legal', minWords: s.minWords || (s.path === '/imprint/' ? 100 : 220), text: s.html, jsonld: [breadcrumbLd(list)] });
+    addPage({ path: s.path, title: s.title, description: s.description, body: crumbs(list) + s.html, kind: s.kind || 'legal', adsense: s.kind === 'about', minWords: s.minWords || (s.path === '/imprint/' ? 100 : 220), text: s.html, jsonld: [breadcrumbLd(list)] });
   }
 }
 
@@ -194,10 +196,10 @@ write('assets/css/site.css', readFileSync(join(ROOT, 'src/assets/site.css'), 'ut
 write('favicon.svg', LOGO.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace(' aria-hidden="true"', ''));
 write('ads.txt', 'google.com, pub-7811071715414905, DIRECT, f08c47fec0942fa0\n');
 write('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
-write('CNAME', 'dailylogicgarden.com\n');
+write('CNAME', 'dailylogicgarden.com'); // as committed on main (no trailing newline)
 write('.nojekyll', '');
 const indexable = pages.filter((p) => !p.noindex);
-write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${SITE}${p.path}</loc><lastmod>${REVIEWED}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${SITE}${p.path}</loc><lastmod>${CHANGED_0411.includes(p.path) ? '2026-11-04' : REVIEWED}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 writeFileSync(join(ROOT, 'build-report.json'), JSON.stringify(report, null, 1));
 console.log(`built ${pages.length} pages + 404 + ${OLD.length} redirects`);
 for (const r of report) console.log(String(r.words).padStart(5), r.kind.padEnd(6), r.path);

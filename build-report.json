@@ -146,11 +146,11 @@
  {
   "path": "/",
   "kind": "home",
-  "words": 481,
+  "words": 905,
   "title": "Daily Logic Garden – Today’s Five Logic Puzzles",
   "noindex": false,
   "ads": false,
-  "minWords": 450
+  "minWords": 800
  },
  {
   "path": "/guides/",
@@ -173,11 +173,11 @@
  {
   "path": "/about/",
   "kind": "about",
-  "words": 545,
+  "words": 1050,
   "title": "About Daily Logic Garden – Method, Publisher and Limits",
   "noindex": false,
   "ads": false,
-  "minWords": 500
+  "minWords": 800
  },
  {
   "path": "/contact/",
@@ -200,7 +200,7 @@
  {
   "path": "/privacy/",
   "kind": "legal",
-  "words": 1063,
+  "words": 1088,
   "title": "Privacy Policy – Daily Logic Garden (Ads, Consent, Data)",
   "noindex": false,
   "ads": false,

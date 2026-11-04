@@ -28,6 +28,7 @@ const urls = [...readFileSync(join(DOCS, 'sitemap.xml'), 'utf8').matchAll(/<loc>
 // stats.test maps to this local server but is not a local host name (for the ?stats_test=1 check)
 const browser = await chromium.launch({ args: ['--host-resolver-rules=MAP stats.test 127.0.0.1'] });
 // every request to a Google domain is recorded – on localhost/127.0.0.1 and with ?stats_test=1 there must be none
+const local404 = [];
 const GOOGLE = /^https?:\/\/([^/]*\.)?(google|googlesyndication|googletagmanager|googleadservices|doubleclick|gstatic|google-analytics)\.[a-z.]+\//;
 const googleRequests = [];
 let fails = 0, minAd = Infinity, minAdWhere = '', printPages = 0, lgFit = null;
@@ -48,6 +49,8 @@ async function solveWithHints(page, label) {
 for (const width of [390, 1366]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   ctx.on('request', (r) => { if (GOOGLE.test(r.url())) googleRequests.push(r.url()); });
+  // every local resource must exist: a 404 from the local server is a broken link or asset
+  ctx.on('response', (r) => { if (r.status() === 404 && r.url().startsWith(BASE)) local404.push(r.url()); });
   await ctx.route('**/*', (route) => (route.request().url().startsWith(BASE) ? route.continue() : route.abort()));
   for (const u of urls) {
     const page = await ctx.newPage();
@@ -110,7 +113,8 @@ for (const width of [390, 1366]) {
         const g = grid.getBoundingClientRect(), c = document.querySelector('.lg-cluebox').getBoundingClientRect();
         return { gTop: g.top, gBottom: g.bottom, cTop: c.top, cBottom: c.bottom, vh: innerHeight, gameH: document.querySelector('[data-game]').getBoundingClientRect().height };
       });
-      if (!(fit.cTop >= 0 && fit.cBottom <= fit.gTop + 1 && fit.gBottom <= fit.vh && fit.cBottom - fit.cTop > 80)) fail('who-planted-what clues + grid do not fit ' + JSON.stringify(fit));
+      // 1 px tolerance on both edges: scrollIntoView leaves sub-pixel rests (e.g. bottom 800.48 on an 800 px screen)
+      if (!(fit.cTop >= 0 && fit.cBottom <= fit.gTop + 1 && fit.gBottom <= fit.vh + 1 && fit.cBottom - fit.cTop > 80)) fail('who-planted-what clues + grid do not fit ' + JSON.stringify(fit));
       lgFit = fit;
       await page.setViewportSize({ width: 390, height: 900 });
     }
@@ -163,6 +167,8 @@ for (const width of [390, 1366]) {
   }
   await ctx.close();
 }
+if (local404.length) fail('local 404 responses: ' + [...new Set(local404)].slice(0, 5).join(', '));
+else console.log('no local 404 response');
 if (googleRequests.length) fail('requests to Google domains: ' + [...new Set(googleRequests)].slice(0, 5).join(', '));
 else console.log('no request to any Google domain on localhost / 127.0.0.1 / ?stats_test=1');
 

@@ -272,3 +272,6 @@ footer.site .fine{color:var(--muted);margin-top:1.2rem;font-size:.88rem}
 body.statbox-open{padding-bottom:var(--statbox-room,0)}
 @media (max-width:600px){.statbox{right:0;left:0;bottom:0;width:auto;max-height:60vh;border-width:2px 0 0;border-top:6px solid var(--pollen);box-shadow:0 -6px 20px rgba(0,0,0,.16);padding:.6rem 16px .8rem;font-size:.9rem;line-height:1.45}.statbox-h{font-size:1.1rem;margin-bottom:.3rem}.statbox-row{margin-top:.5rem}.statbox-x{top:.15rem;right:.25rem}}
 @media print{.statbox,.statbox-live{display:none!important}body.statbox-open{padding-bottom:0}}
+.statbox-more{margin:.7rem 0 0}
+.statbox-more[hidden]{display:none}
+.statbox-google{min-height:44px;text-align:left;font-weight:700;color:var(--ink)}

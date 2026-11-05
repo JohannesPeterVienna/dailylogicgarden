@@ -91,7 +91,7 @@ function page({ scope = 'page', stored, storage = 'ok', gpc = false, cmp = 'none
   const box = () => inserted.find((el) => el.attrs.role === 'dialog') || null;
   const live = () => inserted.find((el) => el.attrs['aria-live'] === 'polite') || null;
   return {
-    ctx, store, updates, configs, cookieWrites, advance, box, live, privacyBtn, body,
+    ctx, store, updates, configs, cookieWrites, advance, box, live, privacyBtn, body, scripts,
     shown: () => !!box() && box().hidden === false,
     gtm: () => scripts.filter((s) => /googletagmanager\.com\/gtag\/js/.test(s.src || '')),
     jar: () => jar.slice(),
@@ -338,6 +338,43 @@ test('pages without ads: no timer, no GA; "Privacy settings" opens the window to
   assert.strictEqual(p.saved().choice, 'denied'); assert.strictEqual(p.gtm().length, 0); assert.strictEqual(p.flag(), true);
   p.privacyBtn.fire('click'); p.pick('granted');
   assert.strictEqual(p.gtm().length, 0, 'settings pages never load GA');
+});
+test('pages without ads: "Open Google’s ad & U.S. privacy choices" loads only Google’s consent script on click, Google then decides, GA stays off', () => {
+  const p = page({ scope: 'settings', stored: { v: 1, choice: 'granted', at: Date.UTC(2026, 10, 1) } });
+  assert.strictEqual(p.scripts.length, 0);
+  p.privacyBtn.fire('click');
+  assert.strictEqual(p.box().querySelector('[data-sb-more]').hidden, false);
+  assert.match(p.box().innerHTML, /data-sb-google>Open Google’s ad &amp; U\.S\. privacy choices</);
+  assert.strictEqual(p.scripts.length, 0, 'nothing loaded before the click');
+  p.box().querySelector('[data-sb-google]').fire('click');
+  assert.strictEqual(p.shown(), false);
+  assert.deepStrictEqual(p.scripts.map((x) => x.src), ['https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1']);
+  assert.ok(!p.scripts.some((x) => /adsbygoogle/.test(x.src)), 'no ad code');
+  // Google's script arrives: it runs the queued callbacks (listeners + the revocation message)
+  let tcf = null, revocations = 0;
+  const fc = p.ctx.googlefc;
+  fc.showRevocationMessage = () => { revocations++; };
+  fc.getGoogleConsentModeValues = () => GRANT;
+  p.ctx.__tcfapi = (cmd, v, cb) => { if (cmd === 'addEventListener') tcf = cb; };
+  const queued = fc.callbackQueue.slice();
+  fc.callbackQueue = { push: (x) => (typeof x === 'function' ? x() : x.CONSENT_API_READY && x.CONSENT_API_READY()) };
+  queued.forEach((x) => fc.callbackQueue.push(x));
+  assert.strictEqual(revocations, 1);
+  tcf(TC_YES, true);
+  assert.strictEqual(p.saved(), null, 'Google decided: own choice deleted');
+  assert.strictEqual(p.flag(), true); assert.strictEqual(p.gtm().length, 0, 'GA stays off on pages without ads');
+  assert.strictEqual(p.updates[p.updates.length - 1].analytics_storage, 'denied');
+  assert.strictEqual(p.updates[p.updates.length - 1].ad_storage, 'granted');
+  // "Privacy settings" now opens Google's message directly; still no ad code, the consent script only once
+  p.privacyBtn.fire('click');
+  assert.strictEqual(revocations, 2);
+  assert.strictEqual(p.scripts.filter((x) => /fundingchoices/.test(x.src)).length, 1);
+  assert.ok(!p.scripts.some((x) => /adsbygoogle/.test(x.src)));
+});
+test('pages with ads: the extra Google button is not shown in the window', () => {
+  const p = page({ cmp: 'none' });
+  p.advance(3000);
+  assert.strictEqual(p.box().querySelector('[data-sb-more]').hidden, true);
 });
 test('"Privacy settings" while the window decides opens the window, not the hidden CMP', () => {
   const p = page({ cmp: 'hidden' });

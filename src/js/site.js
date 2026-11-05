@@ -67,7 +67,7 @@
   // gtag.js is inserted once per page view; Google signals and ad personalization signals are off.
   // (The site sends no GA events; any future event must first check window[OFF] === false.)
   function startAnalytics() {
-    if (gaOn || NO_GOOGLE) return;
+    if (gaOn || NO_GOOGLE || stats.noGa) return;
     gaOn = true;
     if (document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) return;
     var s = document.createElement('script');
@@ -89,7 +89,7 @@
     if (stats.phase === 'window') { windowUpdate(); return; }
     var cm = seen.cmReady && C.region(seen.tc) !== 'none' ? cmValues() : null;
     var d = C.decide(seen.tc, cm, C.usNow(seen.us, seen.gpp));
-    if (GPC) d.analytics_storage = 'denied';   // Global Privacy Control: no statistics
+    if (GPC || stats.noGa) d.analytics_storage = 'denied';   // Global Privacy Control or a page without ads: no statistics
     var analytics = d.analytics_storage === 'granted';
     window[OFF] = !analytics;
     var sig = JSON.stringify(d);
@@ -143,27 +143,46 @@
       b.addEventListener('click', function () {
         // interim mode or a page without ads: our statistics window (view, change, withdraw)
         if (stats.phase === 'window' || stats.phase === 'settings') { openBox(b); return; }
-        // treat it as a withdrawal right away; the CMP reports the new choice through the listeners
-        var before = { tc: seen.tc, cmReady: seen.cmReady };
-        seen.tc = null; seen.cmReady = false; update();
-        window.googlefc = window.googlefc || {};
-        window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
-        window.googlefc.callbackQueue.push(function () {
-          try {
-            // U.S. state law applies -> Google's U.S. opt-out dialog, otherwise the GDPR revocation message
-            window.DLGConsent.privacyChoice(window.googlefc, function (optedOut) {
-              try {
-                if (optedOut) seen.gpp = window.DLGConsent.US_OPTED_OUT; // ad personalization + analytics stay denied
-                else { seen.tc = before.tc; seen.cmReady = before.cmReady; }
-                listenGpp();
-              } catch (e) { seen.gpp = null; }
-              update();
-            }, lastTc || before.tc);   // latest TCF data: GDPR applies -> revocation message
-          } catch (e) { /* consent message not available here */ }
-        });
-        adScript();
+        googleChoices();
       });
     });
+  }
+  // Google's own choices: GDPR revocation message, or the U.S. opt-out dialog where a U.S. state law applies
+  function googleChoices() {
+    // treat it as a withdrawal right away; the CMP reports the new choice through the listeners
+    var before = { tc: seen.tc, cmReady: seen.cmReady };
+    seen.tc = null; seen.cmReady = false; update();
+    window.googlefc = window.googlefc || {};
+    window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
+    window.googlefc.callbackQueue.push(function () {
+      try {
+        // U.S. state law applies -> Google's U.S. opt-out dialog, otherwise the GDPR revocation message
+        window.DLGConsent.privacyChoice(window.googlefc, function (optedOut) {
+          try {
+            if (optedOut) seen.gpp = window.DLGConsent.US_OPTED_OUT; // ad personalization + analytics stay denied
+            else { seen.tc = before.tc; seen.cmReady = before.cmReady; }
+            listenGpp();
+          } catch (e) { seen.gpp = null; }
+          update();
+        }, lastTc || before.tc);   // latest TCF data: GDPR applies -> revocation message
+      } catch (e) { /* consent message not available here */ }
+    });
+    if (AD_PAGE) adScript(); else fcScript();   // pages without ads: only Google's consent script, never the ad code
+  }
+  // Pages without ads load Google's consent script (Funding Choices) only after an explicit click, never adsbygoogle.js.
+  var FC_SRC = 'https://fundingchoicesmessages.google.com/i/' + CLIENT.replace('ca-', '') + '?ers=1';
+  var fcLoaded = false;
+  function fcScript() {
+    if (fcLoaded || NO_GOOGLE || document.querySelector('script[src*="fundingchoicesmessages.google.com"]')) return;
+    fcLoaded = true;
+    var s = document.createElement('script');
+    s.async = true; s.src = FC_SRC;
+    document.head.appendChild(s);
+    (function signalPresent() {   // Google's "googlefcPresent" frame signal from its standard snippet (no request)
+      if (window.frames && window.frames.googlefcPresent) return;
+      if (document.body) { var f = document.createElement('iframe'); f.style.cssText = 'width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;display:none'; f.name = 'googlefcPresent'; document.body.appendChild(f); }
+      else setTimeout(signalPresent, 0);
+    })();
   }
 
   /* ---------- interim statistics window ---------- */
@@ -171,7 +190,9 @@
   var GPC = (function () { try { return navigator.globalPrivacyControl === true; } catch (e) { return false; } })();
   // phase: "waiting" (first ~3 s) | "window" (our window decides analytics) | "google" (Google's CMP decides)
   //        | "settings" (page without ads: never measures, the window only shows / changes the stored choice)
-  var stats = { phase: html.getAttribute('data-stats') === 'page' ? 'waiting' : 'settings', pick: null, erased: false, forgot: false };
+  var AD_PAGE = html.getAttribute('data-stats') === 'page';
+  // noGa: page without ads – analytics never starts here, even after Google's consent script was opened on request
+  var stats = { phase: AD_PAGE ? 'waiting' : 'settings', pick: null, erased: false, forgot: false, noGa: !AD_PAGE };
   function statsKey() { return window.DLGConsent ? window.DLGConsent.STATS_KEY : 'dlg-stats'; }
   function readPick() {
     try { return window.DLGConsent.readStats(window.localStorage.getItem(statsKey()), Date.now()); } catch (e) { return null; }
@@ -256,6 +277,7 @@
       '<p class="statbox-p" id="statbox-p" data-sb-text></p><p class="statbox-now" data-sb-now></p>' +
       '<div class="statbox-row" data-sb-pick><button type="button" class="statbox-btn" data-sb-choice="granted">Allow</button><button type="button" class="statbox-btn" data-sb-choice="denied">Decline</button></div>' +
       '<div class="statbox-row" data-sb-info hidden><button type="button" class="statbox-btn" data-sb-ok>Close</button></div>' +
+      '<p class="statbox-more" data-sb-more hidden><button type="button" class="linklike statbox-google" data-sb-google>Open Google’s ad &amp; U.S. privacy choices</button></p>' +
       '<button type="button" class="statbox-x" data-sb-x aria-label="Close without choosing" title="Close without choosing">' + X_ICON + '</button>';
     Array.prototype.forEach.call(el.querySelectorAll('[data-sb-choice]'), function (b) {
       b.addEventListener('click', function () { choose(b.getAttribute('data-sb-choice')); });
@@ -263,6 +285,13 @@
     // closing (×, Close, Escape) stores nothing and is never consent
     Array.prototype.forEach.call(el.querySelectorAll('[data-sb-x],[data-sb-ok]'), function (b) {
       b.addEventListener('click', function () { closeBox(true); });
+    });
+    // page without ads: Google's consent script loads only now, on this explicit click; Google then decides alone
+    el.querySelector('[data-sb-google]').addEventListener('click', function () {
+      if (NO_GOOGLE) { say('Google’s privacy choices are not loaded in this local preview.'); return; }
+      stats.phase = 'google'; stats.pick = null;   // statistics stay off on this page (stats.noGa)
+      closeBox(false);
+      googleChoices();
     });
     el.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); closeBox(true); }
@@ -286,10 +315,11 @@
         'Not consent to ads: ad storage and personalization stay off. Saved for 12 months; change it under “Privacy settings”. ' +
         '<a href="/privacy/#statistics-window">Privacy policy</a>';
       now.textContent = (rec ? 'Your current choice: ' + (rec.choice === 'granted' ? 'allowed' : 'declined') + ' on ' + longDate(rec.at) + '.' : (settings ? 'No choice saved in this browser yet.' : '')) +
-        (settings ? ' This page never loads statistics. If you decided in Google’s consent message, change it via “Privacy settings” on a puzzle or guide page.' : '');
+        (settings ? ' This page never loads statistics.' : '');
     }
     box.querySelector('[data-sb-pick]').hidden = off;
     box.querySelector('[data-sb-info]').hidden = !off;
+    box.querySelector('[data-sb-more]').hidden = !settings;   // ad consent and the U.S. opt-out stay reachable on pages without ads
   }
   function openBox(opener) {
     try {

@@ -39,7 +39,7 @@ function node(tag) {
 }
 
 function page({ scope = 'page', stored, storage = 'ok', gpc = false, cmp = 'none', cookies = [], host = 'dailylogicgarden.com', now = Date.UTC(2026, 10, 5, 12) } = {}) {
-  let clock = 0, jar = cookies.slice();
+  let clock = 0, timerSeq = 0, jar = cookies.slice();
   const timers = [], updates = [], configs = [], scripts = [], cookieWrites = [];
   const store = new Map(stored === undefined ? [] : [[KEY, typeof stored === 'string' ? stored : JSON.stringify(stored)]]);
   const html = node('html'); html.attrs['data-ads'] = 'no'; html.attrs['data-stats'] = scope;
@@ -65,7 +65,8 @@ function page({ scope = 'page', stored, storage = 'ok', gpc = false, cmp = 'none
   const ctx = {
     document, navigator: gpc ? { globalPrivacyControl: true } : {}, location: { hostname: host, protocol: 'https:', search: '' },
     Date: FakeDate, JSON, Array, Object, String, Math, isFinite, Error,
-    setTimeout: (fn, ms) => { timers.push({ at: clock + (ms || 0), fn }); return timers.length; },
+    setTimeout: (fn, ms) => { const id = ++timerSeq; timers.push({ id, at: clock + (ms || 0), fn }); return id; },
+    clearTimeout: (id) => { const i = timers.findIndex((t) => t.id === id); if (i >= 0) timers.splice(i, 1); },
     matchMedia: () => ({ matches: false }),
     gtag: (...a) => { const c = JSON.parse(JSON.stringify(a.filter((x) => !(x instanceof Object && x.constructor && x.constructor.name === 'Date')))); if (a[0] === 'consent' && a[1] === 'update') updates.push(c[2]); if (a[0] === 'config') configs.push(c); },
     localStorage, dataLayer: []
@@ -383,6 +384,42 @@ test('"Privacy settings" while the window decides opens the window, not the hidd
   assert.strictEqual(p.shown(), true); assert.strictEqual(p.ctx.__revocation, undefined);
 });
 
+test('"Privacy settings" in the first 3 s with a silent CMP: the window opens at once with focus, no later pop-up', () => {
+  const p = page({ cmp: 'hidden' });
+  p.tcf(TC_HIDDEN);
+  p.advance(500);
+  p.privacyBtn.fire('click');
+  assert.strictEqual(p.shown(), true);
+  assert.strictEqual(p.box().querySelector('#statbox-h').focused, 1);
+  assert.strictEqual(p.ctx.__revocation, undefined, 'the hidden CMP is not used');
+  p.closeX();
+  p.advance(5000);
+  assert.strictEqual(p.shown(), false, 'the cancelled timer does not reopen it');
+  assert.strictEqual(p.saved(), null);
+  // CMP has already spoken: Google's dialog, not the window
+  const q = page({ cmp: 'live' });
+  q.tcf(TC_YES, GRANT);
+  q.privacyBtn.fire('click');
+  assert.strictEqual(q.shown(), false); assert.strictEqual(q.ctx.__revocation, 1);
+});
+test('U.S. opt-out while the window is open: it becomes a plain notice and "allow" is refused', () => {
+  const p = page({ cmp: 'hidden' });
+  p.tcf(TC_HIDDEN); p.advance(3000);
+  assert.strictEqual(p.box().querySelector('[data-sb-pick]').hidden, false);
+  p.gpp({ signalStatus: 'ready', parsedSections: { usnat: [{ SaleOptOut: 1 }] } });
+  assert.strictEqual(p.box().querySelector('[data-sb-pick]').hidden, true);
+  assert.strictEqual(p.box().querySelector('[data-sb-info]').hidden, false);
+  assert.match(p.box().querySelector('[data-sb-text]').textContent, /opted out under a U\.S\. state privacy law/);
+  p.pick('granted'); // a stale click on the hidden button
+  assert.strictEqual(p.saved(), null); assert.strictEqual(p.flag(), true); assert.strictEqual(p.gtm().length, 0);
+  p.advance(100);
+  assert.match(p.live().textContent, /stay off/);
+  // GPC on a page without ads: "allow" is refused there too
+  const q = page({ scope: 'settings', gpc: true });
+  q.privacyBtn.fire('click'); q.pick('granted');
+  assert.strictEqual(q.saved(), null);
+});
+
 /* ---------- static guarantees ---------- */
 test('garden export/import never touch the statistics key; no gtag events', () => {
   const play = fs.readFileSync(path.join(__dirname, '..', 'src/js/play.js'), 'utf8');
@@ -406,7 +443,7 @@ test('built pages: ad pages carry data-stats="page", pages without ads "settings
     assert.ok(h.includes('data-privacy-settings'), 'Privacy settings on ' + f);
   }
   const css = read('assets/css/site.css');
-  assert.match(css, /@media print\{\.statbox,\.statbox-live\{display:none!important\}/);
+  assert.match(css, /@media print\{\.statbox,\.statbox-live\{display:none!important\}body\.statbox-open\{padding-bottom:0!important\}\}/);
   assert.match(css, /\.statbox\{position:fixed;right:16px;bottom:16px/);
   assert.match(css, /\.statbox-btn\{min-height:44px/);
   assert.match(css, /\.statbox-x\{[^}]*width:44px;height:44px/);

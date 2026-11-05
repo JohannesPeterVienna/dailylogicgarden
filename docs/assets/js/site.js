@@ -142,6 +142,11 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-privacy-settings]'), function (b) {
       b.addEventListener('click', function () {
         // interim mode or a page without ads: our statistics window (view, change, withdraw)
+        // first ~3 s: if Google's CMP has not spoken yet, decide now instead of waiting – the window opens on request
+        if (stats.phase === 'waiting') {
+          try { clearTimeout(statsTimer); } catch (e) { /* ignore */ }
+          startStats(b);
+        }
         if (stats.phase === 'window' || stats.phase === 'settings') { openBox(b); return; }
         googleChoices();
       });
@@ -224,6 +229,7 @@
     window[OFF] = !on;
     var sig = on ? 'window:on' : 'window:off';
     if (sig !== seen.sent) { seen.sent = sig; gtag('consent', 'update', { analytics_storage: on ? 'granted' : 'denied' }); }
+    if (box && !box.hidden) fillBox();   // e.g. a later U.S. opt-out: the open window switches to a plain notice
     if (on) { stats.erased = false; startAnalytics(); }
     else if (was || ((GPC || usOut()) && !stats.erased)) { stats.erased = true; eraseGa(); }   // switched off, or GPC / U.S. opt-out: no _ga may linger
   }
@@ -231,7 +237,8 @@
     stats.phase = 'google'; stats.pick = null;   // Google's consent management counts from now on
     closeBox(false);
   }
-  function startStats() {
+  var statsTimer = null;
+  function startStats(opener) {
     var C = window.DLGConsent;
     if (stats.phase !== 'waiting' || !C) return;
     if (C.cmpTakesOver(seen.tc)) { update(); return; }
@@ -239,11 +246,16 @@
     stats.pick = readPick();
     if ((stats.pick && stats.pick.choice === 'denied') || GPC || usOut()) eraseGa();   // declined earlier, GPC or U.S. opt-out: no GA cookie may linger
     update();
-    if (!stats.pick && !GPC && !usOut()) openBox(null);
+    if (!stats.pick && !GPC && !usOut() && !opener) openBox(null);   // opened on request: the caller opens it with focus
   }
   function choose(choice) {
     var C = window.DLGConsent;
     if (!C || (stats.phase !== 'window' && stats.phase !== 'settings')) { closeBox(true); return; }
+    if (choice === 'granted' && (GPC || usOut())) {   // GPC / U.S. opt-out: "allow" is refused, nothing is stored
+      if (box && !box.hidden) fillBox();
+      say('Statistics stay off because of your privacy signal; nothing was saved.');
+      return;
+    }
     var rec = C.statsRecord(choice, Date.now());
     try { window.localStorage.setItem(C.STATS_KEY, JSON.stringify(rec)); } catch (e) { /* storage blocked: the choice holds for this page view */ }
     stats.pick = rec;
@@ -347,5 +359,5 @@
   if (adsAllowed) fillSlots();
   listen();
   (function () { var rec = readPick(); if (GPC || (rec && rec.choice === 'denied')) eraseGa(); })();   // a stored "no" or GPC deletes GA cookies at once
-  if (stats.phase !== 'settings') setTimeout(startStats, STATS_WAIT);
+  if (stats.phase !== 'settings') statsTimer = setTimeout(function () { startStats(null); }, STATS_WAIT);
 })();

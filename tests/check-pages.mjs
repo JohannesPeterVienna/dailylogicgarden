@@ -90,8 +90,8 @@ ok(readFileSync(join(DOCS, 'ads.txt'), 'utf8').trim() === 'google.com, pub-78110
 ok(readFileSync(join(DOCS, 'robots.txt'), 'utf8').includes('Sitemap: https://dailylogicgarden.com/sitemap.xml'), 'robots');
 ok(readFileSync(join(DOCS, 'CNAME'), 'utf8').trim() === 'dailylogicgarden.com', 'CNAME');
 ok(existsSync(join(DOCS, 'assets/fonts/OFL-Fraunces.txt')) && existsSync(join(DOCS, 'assets/fonts/OFL-Atkinson-Hyperlegible.txt')), 'font licenses');
-// slot IDs are empty
-ok(/afterplay: ''[\s\S]*lede: ''[\s\S]*mid: ''[\s\S]*side: ''/.test(readFileSync(join(DOCS, 'assets/js/site.js'), 'utf8')), 'ad slot IDs empty');
+// slot IDs are the shared AdSense units of the account
+ok(/afterplay: '7497607759'[\s\S]*lede: '7497607759'[\s\S]*mid: '1292301217'[\s\S]*side: '1292301217'/.test(readFileSync(join(DOCS, 'assets/js/site.js'), 'utf8')), 'ad slot IDs set');
 // page weight: html + css + js + preloaded fonts
 const shared = ['assets/css/site.css', 'assets/js/consent.js', 'assets/js/site.js', 'assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2', 'assets/fonts/fraunces-latin-700-normal.woff2', 'assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2'].reduce((s, f) => s + statSync(join(DOCS, f)).size, 0);
 const engine = statSync(join(DOCS, 'assets/js/garden.js')).size;

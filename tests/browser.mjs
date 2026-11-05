@@ -121,10 +121,18 @@ for (const width of [390, 1366]) {
     if ((u === '/' || u === '/garden/') && !(await page.locator('[data-garden] svg').count())) fail('garden svg ' + u);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 0) fail(`horizontal overflow ${overflow}px ${u} @${width}`);
-    // force ad containers visible at full size and measure distance to controls
+    // nothing is filled here (external requests blocked): no ad container, label included, may take any room
+    const emptyAds = await page.evaluate(() => [...document.querySelectorAll('.ad')].filter((a) => a.offsetHeight > 0).map((a) => a.dataset.slot));
+    if (emptyAds.length) fail(`empty ad container visible (${emptyAds.join(', ')}) ${u} @${width}`);
+    // force ad containers visible at full size, as if Google had filled them, and measure distance to controls
     const d = await page.evaluate(() => {
       const ads = [...document.querySelectorAll('.ad')];
-      ads.forEach((a) => { a.hidden = false; a.style.minHeight = '250px'; a.style.background = 'rgba(200,0,0,.08)'; });
+      ads.forEach((a) => {
+        a.hidden = false; a.style.minHeight = '250px'; a.style.background = 'rgba(200,0,0,.08)';
+        let ins = a.querySelector('ins.adsbygoogle');
+        if (!ins) { ins = document.createElement('ins'); ins.className = 'adsbygoogle'; a.appendChild(ins); }
+        ins.setAttribute('data-ad-status', 'filled');
+      });
       const ctrls = [...document.querySelectorAll('button, a.btn, input, select, textarea, [data-game], .cells, .lg-grids, form, [data-archive]')].filter((e) => { const r = e.getBoundingClientRect(); return r.width && r.height && !e.closest('.ad'); });
       let min = Infinity, what = '';
       for (const a of ads) {
@@ -151,6 +159,39 @@ for (const width of [390, 1366]) {
   }
   await ctx.close();
 }
+// ad containers with a stubbed adsbygoogle.js that never fills: nothing visible; "unfilled" stays collapsed,
+// "filled" shows the container with its "Advertisement" label and its 48 px margin
+for (const width of [390, 1366]) {
+  const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+  await ctx.route('**/*', (route) => (route.request().url().startsWith(BASE) ? route.continue() : route.fulfill({ status: 200, contentType: 'text/javascript', body: '/* stub: no ad */' })));
+  for (const u of ['/flower-beds/', '/guides/binary-puzzle-rules/', '/archive/']) {
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(BASE + u, { waitUntil: 'load' });
+    const r = await page.evaluate(async () => {
+      const tick = () => new Promise((ok) => setTimeout(ok, 0));   // MutationObserver reports asynchronously
+      const shown = () => [...document.querySelectorAll('.ad')].filter((a) => a.offsetHeight > 0 || parseFloat(getComputedStyle(a).marginTop) > 0).length;
+      const ins = [...document.querySelectorAll('.ad:not([hidden]) ins.adsbygoogle')];
+      const none = shown();
+      ins.forEach((i) => i.setAttribute('data-ad-status', 'unfilled')); await tick();
+      const unfilled = shown();
+      ins.forEach((i) => i.setAttribute('data-ad-status', 'filled')); await tick();
+      const boxes = ins.map((i) => i.parentElement);
+      return { ins: ins.length, none, unfilled, filled: shown(),
+        label: boxes.every((b) => b.querySelector('.ad-label').offsetHeight > 0),
+        margin: boxes.every((b) => getComputedStyle(b).marginTop === '48px'),
+        cls: boxes.every((b) => b.classList.contains('ad-on')) };
+    });
+    if (!r.ins) fail(`stub: no ad container filled in ${u} @${width}`);
+    if (r.none || r.unfilled) fail(`stub: empty ad container visible (${r.none}/${r.unfilled}) ${u} @${width}`);
+    if (r.filled !== r.ins || !r.label || !r.margin || !r.cls) fail(`stub: filled ad not shown (${r.filled}/${r.ins}, label ${r.label}, margin ${r.margin}, class ${r.cls}) ${u} @${width}`);
+    if (errors.length) fail(`stub: JS errors ${u} @${width}: ${errors.join(' | ')}`);
+    await page.close();
+  }
+  await ctx.close();
+}
+
 // localhost and ?stats_test=1 on a non-local host name: no Google script tag, no Google request
 {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });

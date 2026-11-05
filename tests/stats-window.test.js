@@ -54,7 +54,7 @@ function page({ scope = 'page', stored, storage = 'ok', gpc = false, cmp = 'none
     querySelector: (sel) => (sel === '.skip' ? skip : null),
     querySelectorAll: (sel) => (sel === '[data-privacy-settings]' ? [privacyBtn] : []),
     get cookie() { return jar.join('; '); },
-    set cookie(v) { cookieWrites.push(v); const name = v.split('=')[0]; if (/expires=Thu, 01 Jan 1970/.test(v)) jar = jar.filter((c) => c.split('=')[0] !== name); }
+    set cookie(v) { cookieWrites.push(v); const name = v.split('=')[0]; jar = jar.filter((c) => c.split('=')[0] !== name); if (!/expires=Thu, 01 Jan 1970/.test(v)) jar.push(v.split(';')[0]); }
   };
   const blocked = () => { throw new Error('SecurityError'); };
   const localStorage = storage === 'blocked' ? { getItem: blocked, setItem: blocked, removeItem: blocked }
@@ -196,6 +196,30 @@ test('GPC: no window, no analytics, even with a stored "allow"', () => {
   assert.strictEqual(q.shown(), true);
   assert.match(q.box().querySelector('[data-sb-text]').textContent, /Global Privacy Control/);
   assert.strictEqual(q.box().querySelector('[data-sb-pick]').hidden, true);
+});
+test('GPC deletes existing _ga cookies at load, also with a stored "allow" and on pages without ads', () => {
+  for (const scope of ['page', 'settings']) {
+    const p = page({ scope, cmp: 'none', gpc: true, stored: { v: 1, choice: 'granted', at: Date.UTC(2026, 10, 1) }, cookies: ['_ga=GA1.1.1', '_ga_T00HRG2YVF=GS1', 'keep=1'] });
+    assert.deepStrictEqual(p.jar(), ['keep=1'], scope + ': at load');
+    p.ctx.document.cookie = '_ga=GA1.1.2'; // a cookie appearing later is removed at the 3-s start
+    p.advance(3000);
+    if (scope === 'page') assert.deepStrictEqual(p.jar(), ['keep=1'], 'at start');
+    assert.strictEqual(p.flag(), true); assert.strictEqual(p.gtm().length, 0);
+  }
+  // Google phase (gdprApplies false, CMP grants) with GPC: no GA, _ga deleted
+  const g = page({ cmp: 'live', gpc: true, cookies: ['_ga=GA1.1.4'] });
+  g.ctx.document.cookie = '_ga=GA1.1.4';
+  g.tcf({ gdprApplies: false, eventStatus: 'tcloaded', tcString: '' });
+  assert.deepStrictEqual(g.jar(), []); assert.strictEqual(g.flag(), true);
+});
+test('U.S. opt-out with a stored "allow" and _ga already present: deleted at the start, no window', () => {
+  const p = page({ cmp: 'hidden', stored: { v: 1, choice: 'granted', at: Date.UTC(2026, 10, 1) } });
+  p.ctx.googlefc.usstatesoptout = { getInitialUsStatesOptOutStatus: () => 3 };
+  p.ctx.__queue.filter((x) => x && x.INITIAL_US_STATES_OPT_OUT_DATA_READY).forEach((x) => x.INITIAL_US_STATES_OPT_OUT_DATA_READY());
+  p.tcf(TC_HIDDEN);
+  p.ctx.document.cookie = '_ga=GA1.1.8';
+  p.advance(3000);
+  assert.deepStrictEqual(p.jar(), []); assert.strictEqual(p.flag(), true); assert.strictEqual(p.shown(), false); assert.strictEqual(p.gtm().length, 0);
 });
 test('U.S. opt-out via GPP during the window phase: no analytics', () => {
   const p = page({ cmp: 'hidden', stored: { v: 1, choice: 'granted', at: Date.UTC(2026, 10, 1) }, cookies: ['_ga=GA1.1.5'] });

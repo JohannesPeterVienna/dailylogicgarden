@@ -96,7 +96,7 @@
     if (sig !== seen.sent) { seen.sent = sig; gtag('consent', 'update', d); }
     if (stats.phase === 'google' && (C.cmpDecided(seen.tc) || (seen.tc && seen.tc.gdprApplies === false))) forgetPick();
     if (analytics) { stats.erased = false; startAnalytics(); }
-    else if (stats.phase === 'google' && !stats.erased && (C.cmpRefusesStats(seen.tc, cm) || (seen.tc && seen.tc.gdprApplies === false && usOut()))) {
+    else if (stats.phase === 'google' && !stats.erased && (GPC || C.cmpRefusesStats(seen.tc, cm) || (seen.tc && seen.tc.gdprApplies === false && usOut()))) {
       stats.erased = true; eraseGa();   // Google says no: no GA cookie may linger, even if the window was never used
     }
   }
@@ -203,8 +203,8 @@
     window[OFF] = !on;
     var sig = on ? 'window:on' : 'window:off';
     if (sig !== seen.sent) { seen.sent = sig; gtag('consent', 'update', { analytics_storage: on ? 'granted' : 'denied' }); }
-    if (on) startAnalytics();
-    else if (was) eraseGa();
+    if (on) { stats.erased = false; startAnalytics(); }
+    else if (was || ((GPC || usOut()) && !stats.erased)) { stats.erased = true; eraseGa(); }   // switched off, or GPC / U.S. opt-out: no _ga may linger
   }
   function handOver() {
     stats.phase = 'google'; stats.pick = null;   // Google's consent management counts from now on
@@ -216,7 +216,7 @@
     if (C.cmpTakesOver(seen.tc)) { update(); return; }
     stats.phase = 'window';
     stats.pick = readPick();
-    if (stats.pick && stats.pick.choice === 'denied') eraseGa();   // declined earlier: no GA cookie may linger
+    if ((stats.pick && stats.pick.choice === 'denied') || GPC || usOut()) eraseGa();   // declined earlier, GPC or U.S. opt-out: no GA cookie may linger
     update();
     if (!stats.pick && !GPC && !usOut()) openBox(null);
   }
@@ -316,6 +316,6 @@
   privacyButtons();
   if (adsAllowed) fillSlots();
   listen();
-  (function () { var rec = readPick(); if (rec && rec.choice === 'denied') eraseGa(); })();   // a stored "no" deletes GA cookies at once
+  (function () { var rec = readPick(); if (GPC || (rec && rec.choice === 'denied')) eraseGa(); })();   // a stored "no" or GPC deletes GA cookies at once
   if (stats.phase !== 'settings') setTimeout(startStats, STATS_WAIT);
 })();

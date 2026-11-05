@@ -275,3 +275,6 @@ body.statbox-open{padding-bottom:var(--statbox-room,0)}
 .statbox-more{margin:.7rem 0 0}
 .statbox-more[hidden]{display:none}
 .statbox-google{min-height:44px;text-align:left;font-weight:700;color:var(--ink)}
+
+/* long URLs in legal text never widen the page (320-px phones) */
+.prose a{overflow-wrap:anywhere}

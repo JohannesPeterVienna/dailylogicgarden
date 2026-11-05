@@ -7,10 +7,11 @@
   'use strict';
   var CLIENT = 'ca-pub-7811071715414905';
   var SLOTS = {
-    afterplay: '', // below the first explanation on puzzle pages, never next to the board
-    lede: '',      // guides: after the introduction
-    mid: '',       // guides: in the middle of the article
-    side: ''       // guides: sidebar from 1200 px, not sticky
+    // Shared responsive AdSense units “Themen-Websites – …” (account pub-7811071715414905)
+    afterplay: '7497607759', // below the first explanation on puzzle pages, never next to the board
+    lede: '7497607759',      // guides: after the introduction
+    mid: '1292301217',       // guides: in the middle of the article
+    side: '1292301217'       // guides: sidebar from 1200 px, not sticky
   };
   var GA_ID = 'G-T00HRG2YVF';
   var html = document.documentElement;

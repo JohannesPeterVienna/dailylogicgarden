@@ -41,7 +41,7 @@ const GUARD = `<script>window.DLG_NO_GOOGLE=(function(l){var h=l.hostname,q=/[?&
 const ADS_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${PUB}`;
 const ADSENSE = `<script data-ads-loader>if(!window.DLG_NO_GOOGLE){(function(){var s=document.createElement('script');s.async=true;s.src='${ADS_SRC}';s.crossOrigin='anonymous';document.head.appendChild(s);})();}</script>`;
 
-const LOGO = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#23412F"/><path d="M20 31V17" stroke="#F1F4EC" stroke-width="2.4" stroke-linecap="round"/><path d="M20 22c-6 0-9-4-9-9 6 0 9 4 9 9zM20 19c0-6 4-9 9-9 0 6-4 9-9 9z" fill="#E3B23C"/><path d="M11 31h18" stroke="#F1F4EC" stroke-width="2" stroke-linecap="round"/></svg>`;
+const LOGO = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#1A1A1A"/><path d="M20 31V17" stroke="#F1F4EC" stroke-width="2.4" stroke-linecap="round"/><path d="M20 22c-6 0-9-4-9-9 6 0 9 4 9 9zM20 19c0-6 4-9 9-9 0 6-4 9-9 9z" fill="#E3B23C"/><path d="M11 31h18" stroke="#F1F4EC" stroke-width="2" stroke-linecap="round"/></svg>`;
 const NAV = [['Today', '/'], ['Flower Beds', '/flower-beds/'], ['Tents & Trees', '/tents-and-trees/'], ['Sun & Shade', '/sun-and-shade/'], ['Garden Path', '/garden-path/'], ['Who Planted What', '/who-planted-what/'], ['Guides', '/guides/'], ['Archive', '/archive/'], ['My garden', '/garden/']];
 
 function header(path) {
@@ -82,7 +82,7 @@ ${refresh ? `<meta http-equiv="refresh" content="0; url=${refresh}">` : ''}
 <meta name="google-adsense-account" content="${PUB}">
 ${CONSENT_DEFAULTS}
 ${adsense ? ADSENSE : ''}
-<meta name="theme-color" content="#23412F">
+<meta name="theme-color" content="#F6F5F1">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -92,6 +92,7 @@ ${adsense ? ADSENSE : ''}
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 ${canonical ? `<meta property="og:url" content="${SITE}${canonical === true ? path : canonical}">` : ''}
+<meta property="og:image" content="${SITE}/assets/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">
 ${jsonld.map(ld).join('\n')}
 </head>
 <body>

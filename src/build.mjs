@@ -15,9 +15,10 @@ const REVIEWED = '2026-11-02';
 const REVIEWED_TEXT = 'November 2, 2026';
 const PUB = 'ca-pub-7811071715414905';
 const GA = 'G-T00HRG2YVF';
-const V = '20261104b';
-// Pages whose content changed on 2026-11-04 (home and About texts, ad scope in the privacy policy): sitemap lastmod.
-const CHANGED_0411 = ['/', '/about/', '/privacy/'];
+const V = '20261105a';
+// Pages whose content changed on 2026-11-04 (home and About texts) and 2026-11-05 (privacy: interim statistics window): sitemap lastmod.
+const CHANGED_0411 = ['/', '/about/'];
+const CHANGED_0511 = ['/privacy/'];
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const strip = (h) => h.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ');
@@ -69,7 +70,7 @@ function adBox(slot) { return `<div class="ad" data-slot="${slot}" hidden><span 
 
 function page({ path, title, description, body, ads = false, adsense = false, noindex = false, canonical = true, jsonld = [], scripts = '', refresh = null }) {
   return `<!doctype html>
-<html lang="en-US" data-ads="${ads ? 'yes' : 'no'}">
+<html lang="en-US" data-ads="${ads ? 'yes' : 'no'}" data-stats="${adsense ? 'page' : 'settings'}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -200,7 +201,7 @@ write('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`)
 write('CNAME', 'dailylogicgarden.com'); // as committed on main (no trailing newline)
 write('.nojekyll', '');
 const indexable = pages.filter((p) => !p.noindex);
-write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${SITE}${p.path}</loc><lastmod>${CHANGED_0411.includes(p.path) ? '2026-11-04' : REVIEWED}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${SITE}${p.path}</loc><lastmod>${CHANGED_0511.includes(p.path) ? '2026-11-05' : CHANGED_0411.includes(p.path) ? '2026-11-04' : REVIEWED}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 writeFileSync(join(ROOT, 'build-report.json'), JSON.stringify(report, null, 1));
 console.log(`built ${pages.length} pages + 404 + ${OLD.length} redirects`);
 for (const r of report) console.log(String(r.words).padStart(5), r.kind.padEnd(6), r.path);

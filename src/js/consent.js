@@ -107,7 +107,73 @@
     return h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]';
   }
 
-  var api = { region: region, decide: decide, allDenied: allDenied, privacyChoice: privacyChoice, usFromGpp: usFromGpp, usNow: usNow, localOrTest: localOrTest, US_OPTED_OUT: 3 };
+  /* ---------- interim statistics window (since 5 Nov 2026) ----------
+   * Google's consent message is published but reports displayStatus "hidden", so no TCF decision arrives.
+   * While that is so, our own small window asks about Google Analytics only. These helpers decide when
+   * Google has spoken (then only Google counts), read the stored window choice and list GA cookies. */
+  var STATS_KEY = 'dlg-stats', STATS_V = 1, STATS_MONTHS = 12;
+
+  function tcfObject(tc) { return !!tc && typeof tc === 'object'; }
+  /** Google's message is really on screen. "cmpuishown" with displayStatus hidden/disabled does not count. */
+  function cmpShown(tc) {
+    if (!tcfObject(tc)) return false;
+    if (tc.displayStatus === 'visible') return true;
+    return tc.eventStatus === 'cmpuishown' && tc.displayStatus !== 'hidden' && tc.displayStatus !== 'disabled';
+  }
+  /** A real decision: the visitor acted now, or a stored TC string was loaded. */
+  function cmpDecided(tc) {
+    if (!tcfObject(tc)) return false;
+    return tc.eventStatus === 'useractioncomplete' || (tc.eventStatus === 'tcloaded' && typeof tc.tcString === 'string' && tc.tcString !== '');
+  }
+  /** Google's CMP takes over: a decision, its message on screen, or the GDPR clearly not applying. */
+  function cmpTakesOver(tc) { return tcfObject(tc) && (tc.gdprApplies === false || cmpDecided(tc) || cmpShown(tc)); }
+  /**
+   * Google has clearly refused statistics: a decision without purpose 1 / vendor 755, or Consent Mode
+   * reporting analytics as denied (2). Used to delete GA cookies, never to grant anything.
+   */
+  function cmpRefusesStats(tc, cm) {
+    if (!tcfObject(tc)) return false;
+    var cmDenied = !!cm && typeof cm === 'object' && cm.analyticsStoragePurposeConsentStatus === 2;
+    if (tc.gdprApplies === false) return cmDenied;
+    if (!cmpDecided(tc)) return false;
+    var storage = !!(tc.purpose && tc.purpose.consents && tc.purpose.consents[1] === true);
+    var google = !!(tc.vendor && tc.vendor.consents && tc.vendor.consents[GOOGLE_VENDOR] === true);
+    return !storage || !google || cmDenied;
+  }
+
+  /** The stored window choice {v, choice, at}, or null: other version, unknown choice, future time or older than 12 months. */
+  function readStats(raw, now) {
+    var rec;
+    try { rec = JSON.parse(raw); } catch (e) { return null; }
+    if (!rec || typeof rec !== 'object' || rec.v !== STATS_V || (rec.choice !== 'granted' && rec.choice !== 'denied')) return null;
+    if (typeof rec.at !== 'number' || !isFinite(rec.at) || rec.at > now) return null;
+    var until = new Date(rec.at);
+    until.setMonth(until.getMonth() + STATS_MONTHS);
+    return now < until.getTime() ? { v: rec.v, choice: rec.choice, at: rec.at } : null;
+  }
+  function statsRecord(choice, now) { return { v: STATS_V, choice: choice === 'granted' ? 'granted' : 'denied', at: now }; }
+
+  /** Names of Google Analytics cookies (_ga, _ga_<ID>) in a document.cookie string. */
+  function gaCookieNames(jar) {
+    var out = [];
+    String(jar || '').split(';').forEach(function (c) {
+      var name = c.split('=')[0].replace(/^\s+|\s+$/g, '');
+      if (/^_ga(_|$)/.test(name) && out.indexOf(name) < 0) out.push(name);
+    });
+    return out;
+  }
+  /** Every domain attribute a GA cookie for this host can carry: host-only, the host and each parent above the top-level domain. */
+  function cookieScopes(hostname) {
+    var h = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, ''), out = [''];
+    if (!h || h.indexOf('.') < 0 || /^[\d.]+$/.test(h) || h.indexOf(':') >= 0) return out;
+    var parts = h.split('.');
+    for (var i = 0; i < parts.length - 1; i++) { var d = parts.slice(i).join('.'); out.push('; domain=' + d, '; domain=.' + d); }
+    return out;
+  }
+
+  var api = { region: region, decide: decide, allDenied: allDenied, privacyChoice: privacyChoice, usFromGpp: usFromGpp, usNow: usNow, localOrTest: localOrTest, US_OPTED_OUT: 3,
+    STATS_KEY: STATS_KEY, STATS_V: STATS_V, cmpShown: cmpShown, cmpDecided: cmpDecided, cmpTakesOver: cmpTakesOver, cmpRefusesStats: cmpRefusesStats,
+    readStats: readStats, statsRecord: statsRecord, gaCookieNames: gaCookieNames, cookieScopes: cookieScopes };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DLGConsent = api;
 })(this);

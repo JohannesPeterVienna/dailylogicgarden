@@ -222,8 +222,10 @@ fieldset label{display:inline-flex;align-items:center;gap:.35rem;margin:.2rem 1r
 /* until Google delivers an ad (data-ad-status="filled" on the ins) the box is not there for the eye:
    no label, no margin, no height – only the width remains, which AdSense needs to size the unit.
    :has() first; site.js marks html.no-has and the box .ad-on for browsers without :has() */
-.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])),.no-has .ad:not(.ad-on){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
-.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])) .ad-label,.no-has .ad:not(.ad-on) .ad-label{display:none}
+.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
+.no-has .ad:not(.ad-on){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
+.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])) .ad-label{display:none}
+.no-has .ad:not(.ad-on) .ad-label{display:none}
 /* footer */
 footer.site{background:var(--paper);border-top:1px solid var(--line);margin-top:3rem;padding:2rem 0 2.5rem;font-size:.95rem}
 footer.site .cols{display:grid;gap:1.2rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}

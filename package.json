@@ -4,7 +4,7 @@
   "description": "dailylogicgarden.com – five daily placement logic puzzles, static site for GitHub Pages (docs/)",
   "scripts": {
     "build": "node src/build.mjs",
-    "test": "node src/build.mjs && node --test tests/engine.test.js tests/prestates.test.js tests/consent.test.js tests/saves.test.js && node tests/check-pages.mjs",
+    "test": "node src/build.mjs && node --test tests/engine.test.js tests/prestates.test.js tests/consent.test.js tests/stats-window.test.js tests/saves.test.js && node tests/check-pages.mjs",
     "test:browser": "node tests/browser.mjs && node tests/robustness.mjs"
   }
 }

@@ -94,9 +94,10 @@
     window[OFF] = !analytics;
     var sig = JSON.stringify(d);
     if (sig !== seen.sent) { seen.sent = sig; gtag('consent', 'update', d); }
-    if (stats.phase === 'google' && (C.cmpDecided(seen.tc) || (seen.tc && seen.tc.gdprApplies === false))) forgetPick();
+    var googleRules = stats.phase === 'google' || stats.phase === 'settings';
+    if (googleRules && (C.cmpDecided(seen.tc) || (seen.tc && seen.tc.gdprApplies === false))) forgetPick();
     if (analytics) { stats.erased = false; startAnalytics(); }
-    else if (stats.phase === 'google' && !stats.erased && (GPC || C.cmpRefusesStats(seen.tc, cm) || (seen.tc && seen.tc.gdprApplies === false && usOut()))) {
+    else if (googleRules && !stats.erased && (GPC || C.cmpRefusesStats(seen.tc, cm) || (seen.tc && seen.tc.gdprApplies === false && usOut()))) {
       stats.erased = true; eraseGa();   // Google says no: no GA cookie may linger, even if the window was never used
     }
   }
@@ -180,14 +181,18 @@
   function fcScript() {
     if (fcLoaded || NO_GOOGLE || document.querySelector('script[src*="fundingchoicesmessages.google.com"]')) return;
     fcLoaded = true;
+    // as in Google's standard snippet: callback queue first (googleChoices), then the "googlefcPresent" frame, then the script
+    try {
+      if (!(window.frames && window.frames.googlefcPresent) && !document.querySelector('iframe[name="googlefcPresent"]')) {
+        var f = document.createElement('iframe');
+        f.style.cssText = 'width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;display:none';
+        f.name = 'googlefcPresent';
+        document.body.appendChild(f);
+      }
+    } catch (e) { /* the signal frame is optional */ }
     var s = document.createElement('script');
     s.async = true; s.src = FC_SRC;
     document.head.appendChild(s);
-    (function signalPresent() {   // Google's "googlefcPresent" frame signal from its standard snippet (no request)
-      if (window.frames && window.frames.googlefcPresent) return;
-      if (document.body) { var f = document.createElement('iframe'); f.style.cssText = 'width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;display:none'; f.name = 'googlefcPresent'; document.body.appendChild(f); }
-      else setTimeout(signalPresent, 0);
-    })();
   }
 
   /* ---------- interim statistics window ---------- */
@@ -246,7 +251,7 @@
     stats.pick = readPick();
     if ((stats.pick && stats.pick.choice === 'denied') || GPC || usOut()) eraseGa();   // declined earlier, GPC or U.S. opt-out: no GA cookie may linger
     update();
-    if (!stats.pick && !GPC && !usOut() && !opener) openBox(null);   // opened on request: the caller opens it with focus
+    if (!stats.pick && !GPC && !usOut() && !opener && !stats.dismissed) openBox(null);   // opened on request: the caller opens it with focus
   }
   function choose(choice) {
     var C = window.DLGConsent;
@@ -301,7 +306,9 @@
     // page without ads: Google's consent script loads only now, on this explicit click; Google then decides alone
     el.querySelector('[data-sb-google]').addEventListener('click', function () {
       if (NO_GOOGLE) { say('Google’s privacy choices are not loaded in this local preview.'); return; }
-      stats.phase = 'google'; stats.pick = null;   // statistics stay off on this page (stats.noGa)
+      // Google's revocation message or U.S. dialog; never grants anything. Ad pages: the CMP comes with the ad code
+      // already loaded; pages without ads: only Google's consent script, loaded now on this click (statistics stay off there)
+      stats.dismissed = true;
       closeBox(false);
       googleChoices();
     });
@@ -331,7 +338,7 @@
     }
     box.querySelector('[data-sb-pick]').hidden = off;
     box.querySelector('[data-sb-info]').hidden = !off;
-    box.querySelector('[data-sb-more]').hidden = !settings;   // ad consent and the U.S. opt-out stay reachable on pages without ads
+    box.querySelector('[data-sb-more]').hidden = !boxOpener;   // opened via "Privacy settings": ad consent and the U.S. opt-out stay reachable
   }
   function openBox(opener) {
     try {
@@ -341,16 +348,31 @@
       box.hidden = false;
       document.body.classList.add('statbox-open');
       document.body.style.setProperty('--statbox-room', box.offsetHeight + 'px');   // the end of the page stays reachable
+      document.addEventListener('keydown', docEscape);
       if (opener) box.querySelector('#statbox-h').focus();   // opened on request: focus moves in
       else say('A question about visitor statistics is shown at the bottom of the page.');   // shown by itself: focus stays put
     } catch (e) { /* no DOM: nothing to show */ }
   }
+  // Escape closes the open window even without focus in it – unless something else handles Escape (an open dialog or menu)
+  function docEscape(e) {
+    if (!e || (e.key !== 'Escape' && e.key !== 'Esc') || e.defaultPrevented || !box || box.hidden) return;
+    try { if (document.querySelector('dialog[open], [aria-modal="true"], [aria-expanded="true"]')) return; } catch (err) { /* ignore */ }
+    closeBox(true);
+  }
   function closeBox(back) {
     if (!box || box.hidden) return;
+    var inside = false;
+    try { inside = !!document.activeElement && box.contains(document.activeElement); } catch (e) { /* ignore */ }
     box.hidden = true;
+    stats.dismissed = true;   // closed: never shown by itself again in this page view
     try {
+      document.removeEventListener('keydown', docEscape);
       document.body.classList.remove('statbox-open');
       if (back && boxOpener && boxOpener.focus) boxOpener.focus();
+      else if (inside) {   // focus was in the window and there is no opener: continue in the main content
+        var main = document.getElementById('main') || document.querySelector('main');
+        if (main) { if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1'); main.focus(); }
+      }
     } catch (e) { /* ignore */ }
     boxOpener = null;
   }

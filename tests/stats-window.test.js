@@ -17,15 +17,17 @@ const TC_LOADED_EMPTY = Object.assign({}, TC_HIDDEN, { eventStatus: 'tcloaded' }
 const TC_YES = { gdprApplies: true, eventStatus: 'useractioncomplete', tcString: 'CQ-yes', displayStatus: 'hidden', purpose: { consents: { 1: true } }, vendor: { consents: { 755: true } } };
 const TC_NO = { gdprApplies: true, eventStatus: 'useractioncomplete', tcString: 'CQ-no', displayStatus: 'hidden', purpose: { consents: {} }, vendor: { consents: {} } };
 
+let DOC = null;
 function node(tag) {
   const n = {
     tagName: tag, attrs: {}, hidden: false, handlers: {}, focused: 0, offsetHeight: 210, textContent: '', parts: {},
     style: { props: {}, setProperty(k, v) { this.props[k] = v; } },
     classList: { set: new Set(), add(c) { this.set.add(c); }, remove(c) { this.set.delete(c); }, contains(c) { return this.set.has(c); } },
-    setAttribute(k, v) { this.attrs[k] = String(v); }, getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
+    setAttribute(k, v) { this.attrs[k] = String(v); }, hasAttribute(k) { return k in this.attrs; }, getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
     addEventListener(ev, fn) { (this.handlers[ev] = this.handlers[ev] || []).push(fn); },
     fire(ev, e = {}) { (this.handlers[ev] || []).forEach((fn) => fn(Object.assign({ preventDefault() {}, stopPropagation() {} }, e))); },
-    focus() { this.focused++; },
+    focus() { this.focused++; if (DOC) DOC.activeElement = this; },
+    contains(x) { return x === this || Object.values(this.parts).includes(x); },
     set innerHTML(h) { this.html = h; },
     get innerHTML() { return this.html || ''; },
     querySelector(sel) { return this.parts[sel] || (this.parts[sel] = node(sel)); },
@@ -46,16 +48,22 @@ function page({ scope = 'page', stored, storage = 'ok', gpc = false, cmp = 'none
   const body = node('body'), skip = node('a.skip'), privacyBtn = node('button');
   const inserted = [];
   skip.parentNode = { insertBefore: (el) => inserted.push(el) };
-  body.appendChild = (el) => inserted.push(el);
+  body.appendChild = (el) => { inserted.push(el); order.push(el.tagName + (el.name ? ':' + el.name : '')); };
   let tcfListener = null, gppListener = null;
+  const order = [], docKeys = new Set(), main = node('main');
   const document = {
-    documentElement: html, body, head: { appendChild: (s) => scripts.push(s) },
+    documentElement: html, body, head: { appendChild: (s) => { scripts.push(s); order.push('script:' + s.src); } },
+    activeElement: body,
+    getElementById: (id) => (id === 'main' ? main : null),
+    addEventListener: (ev, fn) => { if (ev === 'keydown') docKeys.add(fn); },
+    removeEventListener: (ev, fn) => { if (ev === 'keydown') docKeys.delete(fn); },
     createElement: (t) => node(t),
     querySelector: (sel) => (sel === '.skip' ? skip : null),
     querySelectorAll: (sel) => (sel === '[data-privacy-settings]' ? [privacyBtn] : []),
     get cookie() { return jar.join('; '); },
     set cookie(v) { cookieWrites.push(v); const name = v.split('=')[0]; jar = jar.filter((c) => c.split('=')[0] !== name); if (!/expires=Thu, 01 Jan 1970/.test(v)) jar.push(v.split(';')[0]); }
   };
+  DOC = document;
   const blocked = () => { throw new Error('SecurityError'); };
   const localStorage = storage === 'blocked' ? { getItem: blocked, setItem: blocked, removeItem: blocked }
     : { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
@@ -92,7 +100,9 @@ function page({ scope = 'page', stored, storage = 'ok', gpc = false, cmp = 'none
   const box = () => inserted.find((el) => el.attrs.role === 'dialog') || null;
   const live = () => inserted.find((el) => el.attrs['aria-live'] === 'polite') || null;
   return {
-    ctx, store, updates, configs, cookieWrites, advance, box, live, privacyBtn, body, scripts,
+    ctx, store, updates, configs, cookieWrites, advance, box, live, privacyBtn, body, scripts, order, main,
+    docEsc: (extra = {}) => [...docKeys].forEach((fn) => fn(Object.assign({ key: 'Escape', defaultPrevented: false }, extra))),
+    docListeners: () => docKeys.size,
     shown: () => !!box() && box().hidden === false,
     gtm: () => scripts.filter((s) => /googletagmanager\.com\/gtag\/js/.test(s.src || '')),
     jar: () => jar.slice(),
@@ -350,6 +360,8 @@ test('pages without ads: "Open Google’s ad & U.S. privacy choices" loads only 
   p.box().querySelector('[data-sb-google]').fire('click');
   assert.strictEqual(p.shown(), false);
   assert.deepStrictEqual(p.scripts.map((x) => x.src), ['https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1']);
+  assert.deepStrictEqual(p.order, ['iframe:googlefcPresent', 'script:https://fundingchoicesmessages.google.com/i/pub-7811071715414905?ers=1'], 'queue, then frame, then script (E1)');
+  assert.ok(p.ctx.googlefc.callbackQueue.some((x) => typeof x === 'function'), 'callback queued before the script');
   assert.ok(!p.scripts.some((x) => /adsbygoogle/.test(x.src)), 'no ad code');
   // Google's script arrives: it runs the queued callbacks (listeners + the revocation message)
   let tcf = null, revocations = 0;
@@ -366,16 +378,42 @@ test('pages without ads: "Open Google’s ad & U.S. privacy choices" loads only 
   assert.strictEqual(p.flag(), true); assert.strictEqual(p.gtm().length, 0, 'GA stays off on pages without ads');
   assert.strictEqual(p.updates[p.updates.length - 1].analytics_storage, 'denied');
   assert.strictEqual(p.updates[p.updates.length - 1].ad_storage, 'granted');
-  // "Privacy settings" now opens Google's message directly; still no ad code, the consent script only once
+  // "Privacy settings" still opens the window there; its Google button calls the loaded CMP, the script is not loaded again
   p.privacyBtn.fire('click');
+  assert.strictEqual(p.shown(), true);
+  p.box().querySelector('[data-sb-google]').fire('click');
   assert.strictEqual(revocations, 2);
   assert.strictEqual(p.scripts.filter((x) => /fundingchoices/.test(x.src)).length, 1);
   assert.ok(!p.scripts.some((x) => /adsbygoogle/.test(x.src)));
 });
-test('pages with ads: the extra Google button is not shown in the window', () => {
+test('pages with ads: Google button hidden in the automatic window, shown when opened via "Privacy settings"; it calls the loaded CMP', () => {
+  const p = page({ cmp: 'hidden' });
+  p.tcf(TC_HIDDEN); p.advance(3000);
+  assert.strictEqual(p.box().querySelector('[data-sb-more]').hidden, true);
+  p.closeX();
+  p.privacyBtn.fire('click');
+  assert.strictEqual(p.box().querySelector('[data-sb-more]').hidden, false);
+  p.box().querySelector('[data-sb-google]').fire('click');
+  assert.strictEqual(p.ctx.__revocation, 1);
+  assert.ok(!p.scripts.some((x) => /fundingchoices/.test(x.src)), 'ad pages load no extra consent script');
+  for (const u of p.updates) for (const k of ['ad_storage', 'ad_user_data', 'ad_personalization']) assert.ok(!(k in u) || u[k] === 'denied', 'never grants ' + k);
+});
+test('Escape on the page closes the open window (E3), focus goes to main when it was inside (E4), no automatic reopening (E5)', () => {
   const p = page({ cmp: 'none' });
   p.advance(3000);
-  assert.strictEqual(p.box().querySelector('[data-sb-more]').hidden, true);
+  assert.strictEqual(p.docListeners(), 1);
+  p.docEsc({ defaultPrevented: true });   // something else handled Escape
+  assert.strictEqual(p.shown(), true);
+  p.docEsc();
+  assert.strictEqual(p.shown(), false); assert.strictEqual(p.docListeners(), 0); assert.strictEqual(p.saved(), null);
+  // focus inside the automatic window, then ×: focus continues in main
+  const q = page({ cmp: 'none' });
+  q.advance(3000);
+  q.box().querySelector('choice:granted').focus();
+  q.closeX();
+  assert.strictEqual(q.main.focused, 1); assert.strictEqual(q.main.attrs.tabindex, '-1');
+  q.advance(10000);
+  assert.strictEqual(q.shown(), false);
 });
 test('"Privacy settings" while the window decides opens the window, not the hidden CMP', () => {
   const p = page({ cmp: 'hidden' });

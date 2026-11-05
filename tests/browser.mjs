@@ -121,9 +121,9 @@ for (const width of [390, 1366]) {
     if ((u === '/' || u === '/garden/') && !(await page.locator('[data-garden] svg').count())) fail('garden svg ' + u);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 0) fail(`horizontal overflow ${overflow}px ${u} @${width}`);
-    // nothing is filled here (external requests blocked): no ad container, label included, may take any room
-    const emptyAds = await page.evaluate(() => [...document.querySelectorAll('.ad')].filter((a) => a.offsetHeight > 0).map((a) => a.dataset.slot));
-    if (emptyAds.length) fail(`empty ad container visible (${emptyAds.join(', ')}) ${u} @${width}`);
+    // nothing is filled here (external requests blocked): no ad container may show its label, rule or margin (the ins stays)
+    const emptyAds = await page.evaluate(() => [...document.querySelectorAll('.ad:not([hidden])')].filter((a) => !a.querySelector('ins.adsbygoogle[data-ad-status]') && (((a.querySelector('.ad-label') || {}).offsetHeight > 0) || parseFloat(getComputedStyle(a).marginTop) > 0 || parseFloat(getComputedStyle(a).marginBottom) > 0 || parseFloat(getComputedStyle(a).borderTopWidth) > 0)).map((a) => a.dataset.slot));
+    if (emptyAds.length) fail(`ad label, rule or margin visible without a delivered ad (${emptyAds.join(', ')}) ${u} @${width}`);
     // force ad containers visible at full size, as if Google had filled them, and measure distance to controls
     const d = await page.evaluate(() => {
       const ads = [...document.querySelectorAll('.ad')];
@@ -159,8 +159,8 @@ for (const width of [390, 1366]) {
   }
   await ctx.close();
 }
-// ad containers with a stubbed adsbygoogle.js that never fills: nothing visible; "unfilled" stays collapsed,
-// "filled" shows the container with its "Advertisement" label and its 48 px margin
+// ad containers with a stubbed adsbygoogle.js that never fills: no status → ins visible, no label/margin;
+// "unfilled" → ins display:none; "filled"/"unfill-optimized" → container with its "Advertisement" label and its 48 px margin
 for (const width of [390, 1366]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   await ctx.route('**/*', (route) => (route.request().url().startsWith(BASE) ? route.continue() : route.fulfill({ status: 200, contentType: 'text/javascript', body: '/* stub: no ad */' })));
@@ -169,23 +169,39 @@ for (const width of [390, 1366]) {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(BASE + u, { waitUntil: 'load' });
-    const r = await page.evaluate(async () => {
+    // AdSense help 10762946: the ins is never hidden or clipped before Google answers; only label, rule and margin wait.
+    const r = await page.evaluate(async (fb) => {
       const tick = () => new Promise((ok) => setTimeout(ok, 0));   // MutationObserver reports asynchronously
-      const shown = () => [...document.querySelectorAll('.ad')].filter((a) => a.offsetHeight > 0 || parseFloat(getComputedStyle(a).marginTop) > 0).length;
       const ins = [...document.querySelectorAll('.ad:not([hidden]) ins.adsbygoogle')];
-      const none = shown();
-      ins.forEach((i) => i.setAttribute('data-ad-status', 'unfilled')); await tick();
-      const unfilled = shown();
-      ins.forEach((i) => i.setAttribute('data-ad-status', 'filled')); await tick();
-      const boxes = ins.map((i) => i.parentElement);
-      return { ins: ins.length, none, unfilled, filled: shown(),
-        label: boxes.every((b) => b.querySelector('.ad-label').offsetHeight > 0),
-        margin: boxes.every((b) => getComputedStyle(b).marginTop === '48px'),
-        cls: boxes.every((b) => b.classList.contains('ad-on')) };
-    });
-    if (!r.ins) fail(`stub: no ad container filled in ${u} @${width}`);
-    if (r.none || r.unfilled) fail(`stub: empty ad container visible (${r.none}/${r.unfilled}) ${u} @${width}`);
-    if (r.filled !== r.ins || !r.label || !r.margin || !r.cls) fail(`stub: filled ad not shown (${r.filled}/${r.ins}, label ${r.label}, margin ${r.margin}, class ${r.cls}) ${u} @${width}`);
+      const state = () => ins.map((i) => {
+        const b = i.closest('.ad'), cb = getComputedStyle(b), ci = getComputedStyle(i), ri = i.getBoundingClientRect(), lab = b.querySelector('.ad-label');
+        return { slot: b.dataset.slot, display: ci.display, vis: ci.visibility, w: ri.width, insH: ri.height, boxH: b.getBoundingClientRect().height,
+          overflow: cb.overflowX + '/' + cb.overflowY, boxVis: cb.visibility, label: !!lab && lab.offsetHeight > 0,
+          mt: parseFloat(cb.marginTop), mb: parseFloat(cb.marginBottom), bt: parseFloat(cb.borderTopWidth), cls: b.classList.contains(fb.box) };
+      });
+      const set = async (v) => { ins.forEach((i) => (v ? i.setAttribute('data-ad-status', v) : i.removeAttribute('data-ad-status'))); await tick(); };
+      const out = { n: ins.length, none: state() };
+      await set('unfilled'); out.unfilled = state();
+      await set('filled'); out.filled = state();
+      await set('unfill-optimized'); out.optimized = state();
+      // browser without :has(): drop the :has() rules and force the fallback class on <html>
+      for (const sh of document.styleSheets) { try { for (let k = sh.cssRules.length - 1; k >= 0; k--) if (sh.cssRules[k].cssText.includes(':has(')) sh.deleteRule(k); } catch (e) {} }
+      document.documentElement.classList.add(fb.root);
+      await set(null); out.fbNone = state();
+      await set('unfilled'); out.fbUnfilled = state();
+      await set('unfill-optimized'); out.fbOptimized = state();
+      return out;
+    }, { root: 'no-has', box: 'ad-on' });
+    const kept = (l) => l.every((x) => x.display !== 'none' && x.vis === 'visible' && x.boxVis === 'visible' && x.w > 0 && x.overflow === 'visible/visible' && x.boxH >= x.insH - 0.5);
+    const bare = (l) => l.every((x) => !x.label && !x.mt && !x.mb && !x.bt && !x.cls);
+    const shown = (l) => l.every((x) => x.label && x.boxH > 0 && x.cls && (x.mt === 48));
+    const gone = (l) => l.every((x) => x.display === 'none' && !x.label && x.boxH === 0);
+    if (!r.n) fail('no ad box filled in' + ` ${u} @${width}`);
+    if (!kept(r.none) || !bare(r.none)) fail('without status the ins must stay visible and unclipped, label/rule/margin hidden: ' + JSON.stringify(r.none) + ` ${u} @${width}`);
+    if (!gone(r.unfilled)) fail('unfilled: ins must be display:none, no label: ' + JSON.stringify(r.unfilled) + ` ${u} @${width}`);
+    if (!shown(r.filled)) fail('filled: box with label, rule and margin expected: ' + JSON.stringify(r.filled) + ` ${u} @${width}`);
+    if (!shown(r.optimized)) fail('unfill-optimized: box with label, rule and margin expected: ' + JSON.stringify(r.optimized) + ` ${u} @${width}`);
+    if (!kept(r.fbNone) || !bare(r.fbNone) || !gone(r.fbUnfilled) || !shown(r.fbOptimized)) fail('fallback without :has() differs: ' + JSON.stringify([r.fbNone, r.fbUnfilled, r.fbOptimized]) + ` ${u} @${width}`);
     if (errors.length) fail(`stub: JS errors ${u} @${width}: ${errors.join(' | ')}`);
     await page.close();
   }

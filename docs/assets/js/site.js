@@ -61,11 +61,11 @@
       try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) { box.hidden = true; }
     });
   }
-  // site.css hides the box until data-ad-status="filled" (:has()); for browsers without :has() the
-  // same state is copied to .ad-on whenever Google changes the attribute.
+  // site.css shows label and margin only once Google answers ("filled" or "unfill-optimized", :has()); the ins
+  // itself is never hidden. For browsers without :has() the same state is copied to .ad-on.
   function untilFilled(box, ins) {
     if (!(window.CSS && CSS.supports && CSS.supports('selector(:has(a))'))) document.documentElement.classList.add('no-has');
-    var copy = function () { box.classList.toggle('ad-on', ins.getAttribute('data-ad-status') === 'filled'); };
+    var copy = function () { box.classList.toggle('ad-on', ['filled', 'unfill-optimized'].indexOf(ins.getAttribute('data-ad-status')) !== -1); };
     copy();
     if (window.MutationObserver) new MutationObserver(copy).observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
   }

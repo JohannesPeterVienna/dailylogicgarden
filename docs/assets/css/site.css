@@ -219,13 +219,17 @@ fieldset label{display:inline-flex;align-items:center;gap:.35rem;margin:.2rem 1r
 .ad{margin:48px 0;text-align:center}
 .ad[hidden]{display:none}
 .ad .ad-label{display:block;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
-/* until Google delivers an ad (data-ad-status="filled" on the ins) the box is not there for the eye:
-   no label, no margin, no height – only the width remains, which AdSense needs to size the unit.
-   :has() first; site.js marks html.no-has and the box .ad-on for browsers without :has() */
-.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
-.no-has .ad:not(.ad-on){height:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;overflow:hidden!important}
-.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])) .ad-label{display:none}
+/* Ad slots before Google answers: the <ins class="adsbygoogle"> always stays visible and unclipped
+   (AdSense help 10762946: don't load ad units as initially hidden). Only the extras – label, min-height,
+   border, background, padding, margins – appear once data-ad-status is "filled" or "unfill-optimized".
+   Responsive units are 0 px tall on their own until then; fixed sizes keep their size.
+   :has() first; fallback without :has(): .no-has .ad:not(.ad-on) (class set by a MutationObserver) in separate rules. */
+.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])):not(:has(ins.adsbygoogle[data-ad-status="unfill-optimized"])){min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
+.no-has .ad:not(.ad-on){min-height:0!important;margin-top:0!important;margin-bottom:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
+.ad:not(:has(ins.adsbygoogle[data-ad-status="filled"])):not(:has(ins.adsbygoogle[data-ad-status="unfill-optimized"])) .ad-label{display:none}
 .no-has .ad:not(.ad-on) .ad-label{display:none}
+/* Google's pattern for unfilled ad units (AdSense help 10762946) */
+ins.adsbygoogle[data-ad-status="unfilled"]{display:none!important}
 /* footer */
 footer.site{background:var(--paper);border-top:1px solid var(--line);margin-top:3rem;padding:2rem 0 2.5rem;font-size:.95rem}
 footer.site .cols{display:grid;gap:1.2rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}

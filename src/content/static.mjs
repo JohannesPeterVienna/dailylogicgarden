@@ -136,7 +136,7 @@ export const STATIC = [
     description: 'Legal notice for dailylogicgarden.com under the Austrian E-Commerce Act and Media Act: publisher, contact, business details, trade authority and chamber.',
     html: legal('Legal notice', 'Imprint', `<p>Information according to § 5 of the Austrian E-Commerce Act (ECG) and disclosure according to § 25 of the Austrian Media Act (MedienG).</p>
 <h2 id="owner">Media owner and publisher</h2>
-<p>AdStern – Agentur für digitales Marketing<br>Seilerstätte 8/8<br>1010 Vienna<br>Austria</p>
+<p>AdStern – Agentur für digitales Marketing<br>Seilerstätte 8/8<br>1010 Wien<br>Österreich</p>
 <p>Email: <a href="mailto:office@adstern.com">office@adstern.com</a></p>
 <h2 id="business">Business details</h2>
 <ul><li>Business activity: advertising agency</li>
@@ -155,7 +155,7 @@ export const STATIC = [
     description: 'How dailylogicgarden.com processes data: GitHub Pages hosting, Google AdSense with consent, Analytics after consent, progress kept in your browser, your rights.',
     html: legal('Privacy', 'Privacy policy', `<p>This policy explains what data is processed when you visit dailylogicgarden.com, why, on which legal basis, and which rights you have.</p>
 <h2 id="controller">Controller</h2>
-<p>AdStern – Agentur für digitales Marketing, Seilerstätte 8/8, 1010 Vienna, Austria, <a href="mailto:office@adstern.com">office@adstern.com</a>. More details are in the <a href="/imprint/">imprint</a>.</p>
+<p>AdStern – Agentur für digitales Marketing, Seilerstätte 8/8, 1010 Wien, Österreich, <a href="mailto:office@adstern.com">office@adstern.com</a>. More details are in the <a href="/imprint/">imprint</a>.</p>
 <h2 id="hosting">Hosting on GitHub Pages</h2>
 <p>The site is a collection of static files served by GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. To deliver a page, GitHub necessarily receives technical data from your browser, such as your IP address, the requested address, date and time, browser type and the referring page, and may store it in server logs for a limited time for security purposes. Legal basis: our legitimate interest in delivering a secure website (Art. 6(1)(f) GDPR). Data transfers to the USA are based on the EU–U.S. Data Privacy Framework or standard contractual clauses. See the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub General Privacy Statement</a>.</p>
 <h2 id="local">Puzzle progress in your browser</h2>

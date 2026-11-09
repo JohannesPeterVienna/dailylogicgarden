@@ -65,7 +65,7 @@ function breadcrumbLd(list) {
 function faqLd(faq) {
   return { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: strip(a).replace(/\s+/g, ' ').trim() } })) };
 }
-const PUBLISHER = { '@type': 'Organization', name: 'AdStern', url: SITE + '/about/' };
+const PUBLISHER = { '@type': 'Organization', name: 'AdStern – Agentur für digitales Marketing', url: SITE + '/about/' };
 function adBox(slot) { return `<div class="ad" data-slot="${slot}" hidden><span class="ad-label">Advertisement</span></div>`; }
 
 function page({ path, title, description, body, ads = false, adsense = false, noindex = false, canonical = true, jsonld = [], scripts = '', refresh = null }) {

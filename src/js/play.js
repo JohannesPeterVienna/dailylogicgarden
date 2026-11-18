@@ -134,14 +134,7 @@
       if (self.done) self.celebrate(false);
     }, 20);
   };
-  G.blank = function () {
-    var p = this.p;
-    if (this.type === 'gardenpath') return { path: [p.solution[0]], pencil: {} };
-    if (this.type === 'tents') return Array.from(this.mod.initial(this.mod.geom(p)));
-    if (this.type === 'sunshade') return p.givens.slice();
-    if (this.type === 'whoplanted') return new Array(this.mod.geom(p).size).fill(0);
-    return new Array(p.n * p.n).fill(0);
-  };
+  G.blank = function () { return D.tech.blank(this.type, this.mod, this.p); };
   G.restore = function (u) { return this.type === 'gardenpath' ? { path: u.path.slice(), pencil: u.pencil || {} } : u.slice(); };
   G.snapshot = function () { return this.type === 'gardenpath' ? { path: this.user.path.slice(), pencil: JSON.parse(JSON.stringify(this.user.pencil)) } : this.user.slice(); };
   G.save = function () { store.set(this.saveKey(), { u: this.user, h: Math.min(saves.MAX_HINTS, this.hints), t: Math.min(saves.MAX_SECS, Math.round(this.secs)), s: this.done }); };
@@ -205,6 +198,9 @@
     this.hint = h;
     var label = h.kind === 'mistake' ? 'Check this:' : h.kind === 'done' ? 'Done:' : 'Why?';
     this.hintEl.innerHTML = '<p style="margin:0"><span class="why">' + label + '</span>' + h.text.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</p>';
+    // name the technique behind a deduction and link to the place where it is explained
+    var tq = h.kind === 'deduction' ? D.tech.get(this.type, h.tech) : null;
+    if (tq) this.hintEl.appendChild(el('p', { 'class': 'hint-tech' }, 'Technique: <a href="' + tq.href + '">' + tq.name + '</a> · ' + core.LEVEL_NAMES[core.LEVELS[tq.tier - 1]] + ' level'));
     if (h.kind === 'deduction' || h.kind === 'reveal' || h.kind === 'mistake') {
       var row = el('div', { 'class': 'row' });
       var apply = el('button', { type: 'button', 'class': 'btn small' }, h.kind === 'mistake' ? (this.type === 'gardenpath' ? 'Back up the path' : 'Clear that mark') : 'Apply this step');
@@ -479,19 +475,7 @@
   };
 
   // ---------- garden path ----------
-  G.followPencil = function () {
-    var g = this.mod.geom(this.p), u = this.user;
-    for (;;) {
-      var head = u.path[u.path.length - 1], prev = u.path[u.path.length - 2], next = -1;
-      g.cellEdges[head].forEach(function (e) {
-        if (u.pencil[e] !== 1) return;
-        var o = g.edges[e][0] === head ? g.edges[e][1] : g.edges[e][0];
-        if (o !== prev && u.path.indexOf(o) < 0) next = o;
-      });
-      if (next < 0) break;
-      u.path.push(next);
-    }
-  };
+  G.followPencil = function () { D.tech.followPencil(this.mod, this.p, this.user); };
   G.pathStep = function (k) {
     // extend the path to k, or back up when k is already on it
     var g = this.mod.geom(this.p), u = this.user, head = u.path[u.path.length - 1];
@@ -811,6 +795,9 @@
       })(0);
     });
   }
+
+  // shared with the walkthrough page (walk.js)
+  D.play = { Game: Game, RENDER: RENDER, META: META, TYPES: TYPES, LAUNCH: LAUNCH, el: el, today: today, longDate: longDate, validDate: validDate };
 
   function init() {
     Array.prototype.forEach.call(document.querySelectorAll('[data-game]'), function (r) { r.__game = new Game(r); });

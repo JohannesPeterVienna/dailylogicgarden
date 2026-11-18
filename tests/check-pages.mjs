@@ -40,13 +40,15 @@ for (const url of sitemapUrls) {
   if (r && (r.kind === 'tool' || r.kind === 'guide')) {
     ok(h.includes("<script data-ads-loader>if(!window.DLG_NO_GOOGLE){") && h.includes("s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905';s.crossOrigin='anonymous'") && h.includes('s.async=true'), 'adsense loader ' + path);
     ok(/<table/.test(h) && /<figure><svg/.test(h), 'table and inline svg ' + path);
-    ok(h.includes('Reviewed November 2, 2026'), 'reviewed line ' + path);
-    ok(h.includes('"@type":"FAQPage"') && h.includes('"@type":"BreadcrumbList"') && h.includes('"dateModified":"2026-11-02"'), 'json-ld ' + path);
+    // review line, dateModified and sitemap lastmod agree: 2026-11-02, or 2026-11-18 for the pages changed that day
+    const lastmod = get(sitemap, new RegExp('<loc>' + url.replace(/[.?]/g, '\\$&') + '</loc><lastmod>([^<]+)</lastmod>'));
+    ok(['2026-11-02', '2026-11-18'].includes(lastmod) && h.includes(lastmod === '2026-11-18' ? 'Reviewed November 18, 2026' : 'Reviewed November 2, 2026'), 'reviewed line ' + path);
+    ok(h.includes('"@type":"FAQPage"') && h.includes('"@type":"BreadcrumbList"') && h.includes('"dateModified":"' + lastmod + '"'), 'json-ld ' + path);
     ok(h.includes(r.kind === 'tool' ? '"@type":"WebApplication"' : '"@type":"Article"'), 'type json-ld ' + path);
     ok(/Sources and further reading/.test(h), 'sources ' + path);
     // ad placement order: tools – game, then a text section, then the first slot; guides – lede, slot, sections, mid slot
     if (r.kind === 'tool') {
-      const g = h.indexOf('data-game=') >= 0 ? h.indexOf('data-game=') : Math.max(h.indexOf('data-archive'), h.indexOf('data-printable'));
+      const g = h.indexOf('data-game=') >= 0 ? h.indexOf('data-game=') : Math.max(h.indexOf('data-archive'), h.indexOf('data-printable'), h.indexOf('data-walk'), h.indexOf('data-finder'));
       const a = h.indexOf('data-slot="afterplay"');
       ok(g > 0 && a > g && /<h2[^>]*>[\s\S]{400,}/.test(h.slice(g, a)), 'first slot after first explanation ' + path);
     } else {
@@ -79,10 +81,10 @@ for (const f of all(DOCS).filter((x) => x.endsWith('.html'))) {
 // 404 and redirects
 const nf = readFileSync(join(DOCS, '404.html'), 'utf8');
 ok(nf.includes('noindex') && !nf.includes('rel="canonical"') && !nf.includes('adsbygoogle.js'), '404 noindex, no canonical, no ads');
-for (const old of ['about', 'imprint', 'privacy', 'advertise', 'contact']) {
-  const h = readFileSync(join(DOCS, old + '.html'), 'utf8');
+for (const old of ['about.html', 'imprint.html', 'privacy.html', 'advertise.html', 'contact.html', 'guides/logic-puzzles-for-seniors/index.html']) {
+  const h = readFileSync(join(DOCS, old), 'utf8');
   const to = get(h, /url=([^"]+)"/);
-  ok(h.includes('noindex') && to && to !== '/' && h.includes(`rel="canonical" href="${SITE}${to}"`), 'redirect ' + old);
+  ok(h.includes('noindex') && to && to !== '/' && h.includes(`rel="canonical" href="${SITE}${to.split('#')[0]}"`) && existsSync(fileFor(to)) && !sitemap.includes(old.replace('index.html', '')), 'redirect ' + old);
 }
 const garden = readFileSync(join(DOCS, 'garden/index.html'), 'utf8');
 ok(garden.includes('noindex') && !garden.includes('class="ad"') && !sitemap.includes('/garden/'), 'garden page noindex without ads');
@@ -96,7 +98,9 @@ ok(/afterplay: '7497607759'[\s\S]*lede: '7497607759'[\s\S]*mid: '1292301217'[\s\
 const shared = ['assets/css/site.css', 'assets/js/consent.js', 'assets/js/site.js', 'assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2', 'assets/fonts/fraunces-latin-700-normal.woff2', 'assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2'].reduce((s, f) => s + statSync(join(DOCS, f)).size, 0);
 const engine = statSync(join(DOCS, 'assets/js/garden.js')).size;
 let heaviest = 0;
-for (const url of sitemapUrls) { const h = readFileSync(fileFor(url.replace(SITE, '')), 'utf8'); heaviest = Math.max(heaviest, h.length + shared + (h.includes('garden.js') ? engine : 0)); }
-ok(heaviest < 300 * 1024, 'page weight ' + heaviest);
+for (const url of sitemapUrls) { const h = readFileSync(fileFor(url.replace(SITE, '')), 'utf8'); heaviest = Math.max(heaviest, h.length + shared + ['garden.js', 'walk.js', 'finder.js'].reduce((a, f) => a + (h.includes('/assets/js/' + f) ? statSync(join(DOCS, 'assets/js', f)).size : 0), 0)); }
+// 300 KB until 2026-11-18; the walkthrough page loads the engine plus walk.js and carries a worked board, hence 320 KB
+ok(heaviest < 320 * 1024, 'page weight ' + heaviest);
+void engine;
 console.log(`check-pages: ${checks - fails}/${checks} checks passed; heaviest page ${(heaviest / 1024).toFixed(0)} KB; ${sitemapUrls.length} sitemap URLs`);
 if (fails) process.exit(1);

@@ -1,5 +1,6 @@
 // Guides: at least 900 words each, a table, an inline SVG, FAQ and sources.
 import { figConfined as figConf2, figFlowerBlocks, figConfined, figTents, figLastOne, figBinaryRules, figGrid, figFair, figPipeline, figPath3, figSizes } from './figs.mjs';
+import { workedBoard, sproutTable } from './reference.mjs';
 
 const ABOUT = 'Our own method notes: <a href="/about/">About &amp; method</a>';
 const TATHAM = '<a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/" rel="noopener">Simon Tatham&rsquo;s Portable Puzzle Collection</a> – free implementations of Tents, Unruly (a binary puzzle) and many other grid puzzles';
@@ -9,7 +10,9 @@ const WCAG = '<a href="https://www.w3.org/WAI/standards-guidelines/wcag/" rel="n
 const confined3 = figConfined(3);
 const lastOne = figLastOne();
 
-export const GUIDES = [
+// S: technique counts per puzzle and level (src/techstats.mjs)
+export function guides(S) {
+  return [
   {
     path: '/guides/queens-style-puzzle-rules/', crumb: 'Queens-style rules', kicker: 'Rules · Flower Beds',
     title: 'How to Play Queens-Style Puzzles: Rules in One Minute',
@@ -90,7 +93,8 @@ export const GUIDES = [
 <ul><li><b>Mark empties aggressively.</b> Techniques 3–7 all depend on knowing where a region <i>can</i> still go. Crosses make that visible.</li>
 <li><b>Work from small to large.</b> Small regions and nearly full lines give the most information.</li>
 <li><b>Switch viewpoints.</b> Every few moves, look at rows, then columns, then regions. Each view hides patterns the others show.</li>
-<li><b>Use the hint as a teacher.</b> When you press Why?, read the technique name in the sentence and look for the same pattern elsewhere before applying it.</li></ul>
+<li><b>Use the hint as a teacher.</b> When you press Why?, the hint names its technique under the sentence. Look for the same pattern elsewhere before applying it.</li></ul>
+<p>To see all of this on one board from the first move to the last, open the <a href="/walkthrough/?puzzle=flowerbeds&amp;level=grove&amp;date=2026-11-02&amp;step=1">walkthrough of the Grove board of November 2, 2026</a>; the <a href="/techniques/">technique reference</a> shows how often 150 days of boards needed each technique.</p>
 <p>Practice on today&rsquo;s <a href="/flower-beds/">Flower Beds</a> boards. If you prefer to start at the very beginning, read <a href="/guides/queens-style-puzzle-rules/">the rules in one minute</a> first.</p>`
     ],
     faq: [
@@ -176,6 +180,7 @@ export const GUIDES = [
       `<h2 id="lookahead">The one-tent look-ahead</h2>
 <p>When nothing else works, take one open square and imagine a tent on it. Mark its eight neighbors as grass – only those – and check two things: does any row or column now have too few open squares for its number? Does any tree lose its last free side? If yes, the square is grass.</p>
 <p>This is the Grove technique, and every Grove board in our test needed it at least once. It is bounded: one tent, one ring of grass, one check. If you find yourself imagining a second tent on top of the first, stop – the boards on this site never require that.</p>`,
+      workedBoard('tents', 'bloom', '2026-11-02'),
       `<h2 id="mistakes">Common mistakes</h2>
 <ul><li>Placing a tent diagonally next to its tree. Diagonal does not pair.</li>
 <li>Letting two trees share one tent. Count trees and tents; the numbers must match.</li>
@@ -218,6 +223,7 @@ export const GUIDES = [
       `<h2 id="full">Full-line counting</h2>
 <p>On 10 × 10 Grove boards you meet lines missing two or more of each kind. The idea is the same, with more cases: list the ways to finish the line that obey both rules, and look for squares that are the same in all of them. With practice you don&rsquo;t write the list – you notice, for example, that two remaining suns cannot both fit into the left gap without three shades forming on the right.</p>
 <p>Our solver performs this check line by line and reports the squares that every valid completion shares. It never needs to combine guesses across several lines on the published boards.</p>`,
+      workedBoard('sunshade', 'sprout', '2026-11-02'),
       `<h2 id="habits">Good habits</h2>
 <ul><li>After each new symbol, re-check its row and its column for pairs and sandwiches – most moves cascade.</li>
 <li>Keep a running count per line; &ldquo;three suns already&rdquo; on a 6-wide row is the fastest deduction there is.</li>
@@ -260,6 +266,7 @@ export const GUIDES = [
 <tr><td>X earlier than Y</td><td>X ≠ Y, X not last, Y not first</td><td>all</td></tr>
 <tr><td>X and Y on consecutive days</td><td>X ≠ Y; positions must be neighbors</td><td>Bloom, Grove</td></tr>
 <tr><td>Y the day after X</td><td>X ≠ Y, X not last, Y not first</td><td>Bloom, Grove</td></tr></tbody></table></div>`,
+      workedBoard('whoplanted', 'sprout', '2026-11-02'),
       `<h2 id="loop">Step 5: Loop</h2>
 <p>Repeat steps 2 to 4 until nothing changes. If you are stuck, re-read each clue and ask what it says <i>now</i>, given everything you know. Clues that were useless at the start often decide the end. And never guess – every puzzle on our site has a unique solution that the method above reaches.</p>
 <p>Practice with <a href="/who-planted-what/">Who Planted What</a>; Sprout days use only steps 1–3.</p>`
@@ -314,78 +321,40 @@ export const GUIDES = [
   {
     path: '/guides/logic-puzzles-for-beginners/', crumb: 'Beginners', kicker: 'Getting started',
     title: 'Logic Puzzles for Beginners: Where to Start',
-    description: 'New to logic puzzles? Where to start, which puzzle type suits you, how the Sprout, Bloom and Grove levels build up, and five habits that help from day one.',
+    description: 'New to logic puzzles? What a Sprout board of each of our five puzzles asks of you, measured on 150 boards, plus how to make the boards easy to see and tap.',
     h1: 'Logic puzzles for beginners: where to start',
-    lede: 'Logic puzzles need no math and no trivia – only the willingness to say &ldquo;because&rdquo;. If you have never solved one, this page tells you which puzzle to try first, how our three levels build up, and what to do when you get stuck.',
+    lede: 'Logic puzzles need no math and no trivia – only the willingness to say &ldquo;because&rdquo;. This page shows what the easiest board of each of our five puzzles actually asks of you, how the three levels build up, what to do when you get stuck, and how to make the boards comfortable to see and to tap.',
     sections: [
       `<h2 id="what">What a logic puzzle is</h2>
-<p>A logic puzzle gives you rules and a few clues. Every step follows from them – no knowledge, no luck. The pleasure is the moment a square becomes certain because of something you noticed. All five puzzles on this site have exactly one solution, so there is always a next certain step.</p>`,
+<p>A logic puzzle gives you rules and a few clues. Every step follows from them – no knowledge, no luck. All five puzzles on this site have exactly one solution, so there is always a next certain step.</p>`,
       `<h2 id="which">Which puzzle to try first</h2>
-<div class="tablewrap"><table><caption>Our five puzzles for a beginner</caption>
-<thead><tr><th>Puzzle</th><th>You like…</th><th>First skill</th></tr></thead>
-<tbody><tr><td><a href="/sun-and-shade/">Sun &amp; Shade</a></td><td>quick patterns</td><td>Spotting pairs</td></tr>
-<tr><td><a href="/flower-beds/">Flower Beds</a></td><td>visual shapes</td><td>Finding the last free square</td></tr>
-<tr><td><a href="/tents-and-trees/">Tents &amp; Trees</a></td><td>counting</td><td>Matching row numbers</td></tr>
-<tr><td><a href="/garden-path/">Garden Path</a></td><td>drawing</td><td>Corners with two exits</td></tr>
-<tr><td><a href="/who-planted-what/">Who Planted What</a></td><td>stories and words</td><td>Entering clues as ✕ and ●</td></tr></tbody></table></div>
-<p>Sun &amp; Shade is the gentlest start for most people: the two rules fit on a sticky note, and the pair move gets you far.</p>`,
+${sproutTable(S)}
+<p>The step counts are not minutes; they say how many separate deductions our solver wrote down. Flower Beds has the shortest path because one planted flower rules out many squares at once. Sun &amp; Shade has more steps, but they are the same three small moves again and again, and its two rules fit on a sticky note – for most people a good first puzzle. Who Planted What is the one to choose if you prefer reading clues to scanning a grid. You can watch any of these boards being solved one step at a time in the <a href="/walkthrough/">walkthrough</a>.</p>`,
       `<h2 id="levels">How the levels build up</h2>
 <figure>${figPath3()}<figcaption>Sprout, Bloom, Grove: each level adds one kind of reasoning.</figcaption></figure>
-<p><b>Sprout</b> needs one rule at a time. <b>Bloom</b> asks you to combine two facts – a count and a position, a clue and a grid. <b>Grove</b> adds a short look ahead: imagine one placement and check one consequence. Stay at Sprout until you finish without hints a few days in a row; nothing is lost by staying.</p>`,
+<p><b>Sprout</b> needs one rule at a time. <b>Bloom</b> asks you to combine two facts – a count and a position, a clue and a grid. <b>Grove</b> adds a short look ahead or an argument about several lines at once. The level is set by the hardest technique a board needs, not by its size; the <a href="/techniques/">technique reference</a> lists all of them with how often our boards needed each one.</p>`,
       `<h2 id="stuck">When you get stuck</h2>
-<p>Being stuck is normal and means a fact is hiding in plain sight. Look at the smallest region, the fullest line, the clue you haven&rsquo;t used. Then press Why?: it shows one step and its reason, not the answer. Read it, find the pattern yourself, and apply it.</p>`,
-      `<h2 id="habits">Five habits from day one</h2>
-<ol><li>Mark what is impossible, not only what is certain.</li>
-<li>Never place something &ldquo;to see&rdquo;. If you can&rsquo;t say why, don&rsquo;t.</li>
-<li>After each move, check what it changed nearby.</li>
-<li>Take breaks; fresh eyes find steps.</li>
-<li>Play daily but briefly. The garden grows anyway, and missed days cost nothing.</li></ol>
-<p>When you want more, the guides on <a href="/guides/star-battle-strategy/">Star Battle strategy</a> and <a href="/guides/solve-logic-grid-puzzles/">logic grids</a> go deeper.</p>`
+<p>Being stuck means a fact is hiding in plain sight. Look at the smallest region, the fullest line, the clue you haven&rsquo;t used. Then press Why?: it shows one step, its reason and the name of the technique, not the answer. Read it, find the same pattern elsewhere on the board, and only then apply it.</p>`,
+      `<h2 id="comfort">Comfortable play: larger squares, keyboard, paper</h2>
+<figure>${figSizes([['Flower Beds', 36, 49, 64], ['Tents & Trees', 36, 49, 64], ['Sun & Shade', 36, 64, 100], ['Garden Path', 25, 36, 49]])}<figcaption>Squares per board at each level. Fewer squares mean larger squares on the same screen.</figcaption></figure>
+<ul><li><b>No clock to beat.</b> There is no countdown and no streak. The time appears only in the result after you finish, and it pauses when you switch away. Hints cost nothing.</li>
+<li><b>Zoom.</b> On a computer, press Ctrl and + (Cmd and + on a Mac); the board grows with the page and never needs sideways scrolling.</li>
+<li><b>Screen size.</b> Garden Path at Sprout has the fewest and therefore the largest squares (25). The 10 × 10 Sun &amp; Shade Grove board has the smallest ones and is easier on a tablet or computer than on a phone.</li>
+<li><b>Not by color alone.</b> Beds have patterns, names and thick borders; suns and shades are different shapes. The site follows your device&rsquo;s light or dark setting.</li>
+<li><b>Keyboard.</b> Every puzzle can be played with the keyboard alone: the arrow keys move an outlined cursor and a letter key places the mark. Screen readers announce each square, for example &ldquo;C4, Iris bed, open&rdquo;.</li>
+<li><b>Touch.</b> A tap is enough – no long presses. Garden Path accepts taps instead of dragging, and Undo takes back a tap that landed wrong.</li>
+<li><b>Paper.</b> The <a href="/printable/">printable packs</a> print a week of boards, one per page, in black and white.</li></ul>
+<p>We make no medical promises: puzzles are a pastime, and we do not claim any effect on memory or health.</p>`
     ],
     faq: [
       ['Do I need to be good at math?', 'No. You need to count to ten at most. Logic puzzles are about consequences, not calculations.'],
-      ['How long does a Sprout puzzle take?', 'Usually a few minutes once you know the rules; the first one may take longer.'],
-      ['Are hints cheating?', 'No. They explain a step, and our garden rewards every solved puzzle the same way.'],
-      ['Can children play?', 'The Sprout levels suit older children with an adult. Please note the site shows advertising and is designed for adults.'],
-      ['Do I need an account?', 'No. Your progress is kept in your browser.']
-    ],
-    sources: [TATHAM, '<a href="https://www.worldpuzzle.org/" rel="noopener">World Puzzle Federation</a>', ABOUT]
-  },
-  {
-    path: '/guides/logic-puzzles-for-seniors/', crumb: 'Seniors', kicker: 'Comfortable play',
-    title: 'Logic Puzzles for Seniors: Large Grids, Calm Pace',
-    description: 'Logic puzzles for seniors: large, high-contrast boards, no timers or streaks, keyboard and print options, and tips for comfortable play on any screen.',
-    h1: 'Logic puzzles for seniors: large grids, calm pace',
-    lede: 'Daily puzzles should be a pleasure, not a test. This page describes how to make our boards comfortable to see and to tap, which puzzles suit a calm daily routine, and why nothing on this site punishes a slow day or a missed one.',
-    sections: [
-      `<h2 id="calm">A calm pace by design</h2>
-<p>There is no countdown, no score that falls with time, and no streak to lose. The time only appears in the result after you finish, and it pauses when you switch away. Missed days never wilt your garden. Hints cost nothing.</p>
-<p>We are careful about claims: puzzles are an enjoyable pastime, and we make no medical promises about memory or brain health.</p>`,
-      `<h2 id="sizes">Board sizes at a glance</h2>
-<figure>${figSizes([['Flower Beds', 36, 49, 64], ['Tents & Trees', 36, 49, 64], ['Sun & Shade', 36, 64, 100], ['Garden Path', 25, 36, 49]])}<figcaption>Squares per board at each level. Fewer squares mean larger squares on the same screen.</figcaption></figure>
-<div class="tablewrap"><table><caption>Recommended starting points for comfortable play</caption>
-<thead><tr><th>Puzzle</th><th>Level</th><th>Squares</th><th>Why</th></tr></thead>
-<tbody><tr><td>Garden Path</td><td>Sprout</td><td>25</td><td>Largest squares; drawing is relaxing</td></tr>
-<tr><td>Flower Beds</td><td>Sprout</td><td>36</td><td>Patterns and names, not only colors</td></tr>
-<tr><td>Sun &amp; Shade</td><td>Sprout</td><td>36</td><td>Two clear shapes</td></tr>
-<tr><td>Who Planted What</td><td>Sprout</td><td>3 small grids</td><td>Reading rather than spotting</td></tr></tbody></table></div>`,
-      `<h2 id="seeing">Making the board easy to see</h2>
-<ul><li><b>Zoom.</b> On a computer, press Ctrl and + (Cmd and + on a Mac) – the board grows with the page and never needs sideways scrolling.</li>
-<li><b>Dark or light.</b> The site follows your device&rsquo;s light or dark setting automatically.</li>
-<li><b>Tablet.</b> A tablet held upright gives much larger squares than a phone.</li>
-<li><b>Contrast.</b> Text is designed to meet WCAG contrast guidance; symbols are shapes, not just colors.</li></ul>`,
-      `<h2 id="hands">Easy on the hands</h2>
-<p>Every puzzle can be played entirely with a keyboard: arrows to move, a letter to mark. On touch screens, a tap is enough – no long presses or fine drags (Garden Path also accepts taps instead of dragging). If a tap lands wrong, Undo takes it back.</p>`,
-      `<h2 id="paper">Prefer paper?</h2>
-<p>The <a href="/printable/">printable packs</a> print a week of boards, one per page, in black and white with large squares. Many people enjoy a printed sheet with the morning coffee.</p>`
-    ],
-    faq: [
+      ['How long is a Sprout puzzle?', 'We do not measure players&rsquo; times. As a size guide: our solver writes down between 6 and 27 small steps for a Sprout board, depending on the puzzle (see the table above).'],
+      ['Are hints cheating?', 'No. A hint explains one step, and the garden rewards every solved puzzle the same way.'],
+      ['Will I lose my progress if I close the page?', 'No. Every move is saved in your browser automatically, and no account is needed.'],
       ['Is there a large-print option?', 'Use your browser zoom or the printable packs; both give larger boards without losing anything.'],
-      ['Will I lose my progress if I close the page?', 'No. Every move is saved on your device automatically.'],
-      ['Do I need to log in?', 'No. There are no accounts.'],
-      ['Which puzzle is the most relaxing?', 'Many people find Garden Path at Sprout level the most relaxing, because it is mostly drawing.'],
-      ['Can someone help me set it up?', 'Yes – nothing needs installing. Bookmark the home page; that is all.']
+      ['Can children play?', 'The Sprout levels suit older children with an adult. Please note the site shows advertising and is designed for adults.']
     ],
-    sources: [WCAG, ABOUT]
+    sources: [TATHAM, WCAG, ABOUT]
   }
-];
+  ];
+}

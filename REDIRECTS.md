@@ -9,9 +9,13 @@ Stand: 2.11.2026. The previous site was a small nonogram page (ten boards rotati
 | /privacy.html | /privacy/ |
 | /advertise.html | /contact/ |
 | /contact.html | /contact/ |
+| /guides/logic-puzzles-for-seniors/ | /guides/logic-puzzles-for-beginners/#comfort |
 
 ## Nonogram boards
 Nonograms are no longer published here (they belong to raetsellotse.de, see the concept). Any old nonogram URLs will now return the site's 404 page. If Search Console shows old nonogram URLs with traffic, add redirect pages pointing to the closest new page (for example `/flower-beds/`, never `/`) – check first which URLs existed.
 
 ## Subdomains
 The concept names no subdomains of dailylogicgarden.com. If any exist at the DNS provider from the old setup, remove those records after the domain points to GitHub Pages.
+
+## 18.11.2026
+The guide “Logic puzzles for seniors” was merged into “Logic puzzles for beginners” (section “Comfortable play”). The old address stays as a `noindex` page with `meta refresh` and `canonical` to the beginners guide and is not in the sitemap.

@@ -3,10 +3,12 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TOOLS } from './content/tools.mjs';
-import { GUIDES } from './content/guides.mjs';
+import { guides } from './content/guides.mjs';
 import { EXTRA } from './content/extras.mjs';
 import { prestates } from './precompute.mjs';
 import { home, STATIC, guidesHub, gardenPage, notFound } from './content/static.mjs';
+import { techstats, summarize } from './techstats.mjs';
+import { referencePages, finderData } from './content/reference.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT = join(ROOT, 'docs');
@@ -15,10 +17,15 @@ const REVIEWED = '2026-11-02';
 const REVIEWED_TEXT = 'November 2, 2026';
 const PUB = 'ca-pub-7811071715414905';
 const GA = 'G-T00HRG2YVF';
-const V = '20261105c';
+const V = '20261118a';
 // Pages whose content changed on 2026-11-04 (home and About texts) and 2026-11-05 (privacy: interim statistics window): sitemap lastmod.
 const CHANGED_0411 = ['/', '/about/'];
 const CHANGED_0511 = ['/privacy/'];
+// Pages whose content changed on 2026-11-18 (walkthrough and technique reference added, worked boards in the guides,
+// beginners guide merged with the former seniors guide, home with a playable board): review line, dateModified, lastmod.
+const CHANGED_1811 = ['/', '/about/', '/privacy/', '/walkthrough/', '/techniques/', '/guides/', '/archive/', '/printable/', '/flower-beds/', '/garden-path/', '/guides/star-battle-strategy/',
+  '/guides/tents-and-trees-rules-strategy/', '/guides/binary-puzzle-rules/', '/guides/solve-logic-grid-puzzles/', '/guides/logic-puzzles-for-beginners/'];
+const modified = (path) => (CHANGED_1811.includes(path) ? '2026-11-18' : CHANGED_0511.includes(path) ? '2026-11-05' : CHANGED_0411.includes(path) ? '2026-11-04' : REVIEWED);
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const strip = (h) => h.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ');
@@ -30,10 +37,16 @@ function minify(js) {
 }
 const PRE = prestates();
 if (PRE.added) console.log('precomputed ' + PRE.added + ' generator states');
-const ENGINE_PARTS = ['core', 'flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted', 'draw', 'saves', 'play']
+const ENGINE_PARTS = ['core', 'flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted', 'techniques', 'draw', 'saves', 'play']
   .map((f) => minify(readFileSync(join(ROOT, 'src/js', f + '.js'), 'utf8')));
 ENGINE_PARTS.splice(1, 0, 'DLG.core.setPre(' + JSON.stringify(PRE.data) + ');');
 const ENGINE = ENGINE_PARTS.join('\n');
+// technique counts of the first 150 days (cached like the generator states) and the pages built from them
+const STATS = techstats(PRE.data);
+if (STATS.added) console.log('counted techniques on ' + STATS.added + ' boards');
+const SUMMARY = summarize(STATS.data);
+const GUIDES = guides(SUMMARY);
+TOOLS.push(...referencePages(SUMMARY));
 const CONSENT_DEFAULTS = `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});gtag('set','ads_data_redaction',true);gtag('set','url_passthrough',false);window['ga-disable-${GA}']=true;</script>`;
 // First script in <head>: local preview/test (localhost, 127.0.0.1, ::1, file:) or ?stats_test=1 (kept for the
 // tab in sessionStorage) sets window.DLG_NO_GOOGLE – then no Google script (AdSense, its CMP, GA) is inserted.
@@ -43,7 +56,7 @@ const ADS_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?
 const ADSENSE = `<script data-ads-loader>if(!window.DLG_NO_GOOGLE){(function(){var s=document.createElement('script');s.async=true;s.src='${ADS_SRC}';s.crossOrigin='anonymous';document.head.appendChild(s);})();}</script>`;
 
 const LOGO = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#1A1A1A"/><path d="M20 31V17" stroke="#F1F4EC" stroke-width="2.4" stroke-linecap="round"/><path d="M20 22c-6 0-9-4-9-9 6 0 9 4 9 9zM20 19c0-6 4-9 9-9 0 6-4 9-9 9z" fill="#E3B23C"/><path d="M11 31h18" stroke="#F1F4EC" stroke-width="2" stroke-linecap="round"/></svg>`;
-const NAV = [['Today', '/'], ['Flower Beds', '/flower-beds/'], ['Tents & Trees', '/tents-and-trees/'], ['Sun & Shade', '/sun-and-shade/'], ['Garden Path', '/garden-path/'], ['Who Planted What', '/who-planted-what/'], ['Guides', '/guides/'], ['Archive', '/archive/'], ['My garden', '/garden/']];
+const NAV = [['Today', '/'], ['Flower Beds', '/flower-beds/'], ['Tents & Trees', '/tents-and-trees/'], ['Sun & Shade', '/sun-and-shade/'], ['Garden Path', '/garden-path/'], ['Who Planted What', '/who-planted-what/'], ['Guides', '/guides/'], ['Walkthrough', '/walkthrough/'], ['Archive', '/archive/'], ['My garden', '/garden/']];
 
 function header(path) {
   return `<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="brand" href="/">${LOGO}<span>Daily Logic Garden</span></a><nav class="main" aria-label="Main">${NAV.map(([t, h]) => `<a href="${h}"${h === path ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav></div></header>`;
@@ -51,7 +64,7 @@ function header(path) {
 function footer() {
   return `<footer class="site"><div class="wrap"><div class="cols">
 <div><h2>Play</h2><ul><li><a href="/flower-beds/">Flower Beds</a></li><li><a href="/tents-and-trees/">Tents &amp; Trees</a></li><li><a href="/sun-and-shade/">Sun &amp; Shade</a></li><li><a href="/garden-path/">Garden Path</a></li><li><a href="/who-planted-what/">Who Planted What</a></li></ul></div>
-<div><h2>More</h2><ul><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
+<div><h2>More</h2><ul><li><a href="/walkthrough/">Step-by-step walkthrough</a></li><li><a href="/techniques/">Technique reference</a></li><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
 <div><h2>About</h2><ul><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy policy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
 </div><p class="fine">Daily Logic Garden is published by AdStern, Vienna. Every puzzle is made by our own generator and checked for exactly one solution. Your progress stays in your browser.</p></div></footer>`;
 }
@@ -117,7 +130,7 @@ function faqHtml(faq) {
 function sourcesHtml(src) {
   return `<section class="sources" aria-labelledby="src-h"><h2 id="src-h">Sources and further reading</h2><ul>${src.map((s) => `<li>${s}</li>`).join('')}</ul></section>`;
 }
-const reviewed = `<p class="reviewed">Reviewed ${REVIEWED_TEXT} &middot; Checked against the puzzle engine described on the <a href="/about/">About &amp; method</a> page.</p>`;
+const reviewed = (path) => `<p class="reviewed">Reviewed ${modified(path) === '2026-11-18' ? 'November 18, 2026' : REVIEWED_TEXT} &middot; Checked against the puzzle engine described on the <a href="/about/">About &amp; method</a> page.</p>`;
 
 // ---------- page builders ----------
 for (const x of [...TOOLS, ...GUIDES]) if (EXTRA[x.path]) x.sections.push(...EXTRA[x.path]);
@@ -135,11 +148,11 @@ ${adBox('afterplay')}
 ${rest.join('\n')}
 ${faqHtml(t.faq)}
 ${sourcesHtml(t.sources)}
-${reviewed}</div></article><div class="print-root print-only"></div>`;
+${reviewed(t.path)}</div></article><div class="print-root print-only"></div>`;
   addPage({
-    path: t.path, title: t.title, description: t.description, body, ads: true, adsense: true, kind: 'tool', minWords: 800, text: t.sections.join(' ') + t.faq.map((f) => f.join(' ')).join(' '),
-    jsonld: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: t.appName || t.crumb, url: SITE + t.path, description: t.description, applicationCategory: 'GameApplication', operatingSystem: 'Any (web browser)', isAccessibleForFree: true, dateModified: REVIEWED, publisher: PUBLISHER, inLanguage: 'en-US' }, breadcrumbLd(list), faqLd(t.faq)],
-    scripts: GAME_JS
+    path: t.path, title: t.title, description: t.description, body, ads: true, adsense: true, kind: 'tool', minWords: t.minWords || 800, text: t.sections.join(' ') + t.faq.map((f) => f.join(' ')).join(' '),
+    jsonld: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: t.appName || t.crumb, url: SITE + t.path, description: t.description, applicationCategory: 'GameApplication', operatingSystem: 'Any (web browser)', isAccessibleForFree: true, dateModified: modified(t.path), publisher: PUBLISHER, inLanguage: 'en-US' }, breadcrumbLd(list), faqLd(t.faq)],
+    scripts: t.js === 'finder' ? `<script src="/assets/js/finder.js?v=${V}" defer></script>` : t.js === 'walk' ? GAME_JS + `\n<script src="/assets/js/walk.js?v=${V}" defer></script>` : GAME_JS
   });
 }
 for (const g of GUIDES) {
@@ -152,15 +165,15 @@ ${adBox('mid')}
 ${g.sections.slice(mid).join('\n')}
 ${faqHtml(g.faq)}
 ${sourcesHtml(g.sources)}
-${reviewed}</article><aside class="side" aria-label="Advertisement">${adBox('side')}</aside></div>`;
+${reviewed(g.path)}</article><aside class="side" aria-label="Advertisement">${adBox('side')}</aside></div>`;
   addPage({
     path: g.path, title: g.title, description: g.description, body, ads: true, adsense: true, kind: 'guide', minWords: 900, text: g.lede + ' ' + g.sections.join(' ') + g.faq.map((f) => f.join(' ')).join(' '),
-    jsonld: [{ '@context': 'https://schema.org', '@type': 'Article', headline: g.h1.replace(/<[^>]+>/g, ''), description: g.description, url: SITE + g.path, datePublished: '2026-11-02', dateModified: REVIEWED, author: { '@type': 'Organization', name: 'Daily Logic Garden', url: SITE + '/about/' }, publisher: PUBLISHER, inLanguage: 'en-US', mainEntityOfPage: SITE + g.path }, breadcrumbLd(list), faqLd(g.faq)]
+    jsonld: [{ '@context': 'https://schema.org', '@type': 'Article', headline: g.h1.replace(/<[^>]+>/g, ''), description: g.description, url: SITE + g.path, datePublished: '2026-11-02', dateModified: modified(g.path), author: { '@type': 'Organization', name: 'Daily Logic Garden', url: SITE + '/about/' }, publisher: PUBLISHER, inLanguage: 'en-US', mainEntityOfPage: SITE + g.path }, breadcrumbLd(list), faqLd(g.faq)]
   });
 }
 {
   const h = home();
-  addPage({ path: '/', title: h.title, description: h.description, body: h.html, ads: false, adsense: true, kind: 'home', minWords: 800, text: h.html,
+  addPage({ path: '/', title: h.title, description: h.description, body: h.html + '<div class="print-root print-only"></div>', ads: false, adsense: true, kind: 'home', minWords: 500, text: h.html,
     jsonld: [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Daily Logic Garden', url: SITE + '/', description: h.description, publisher: PUBLISHER, inLanguage: 'en-US' }], scripts: GAME_JS });
   const hub = guidesHub(GUIDES, TOOLS);
   addPage({ path: '/guides/', title: hub.title, description: hub.description, body: crumbs([['Home', '/'], ['Guides', '/guides/']]) + hub.html, kind: 'hub', adsense: true, minWords: 220, text: hub.html, jsonld: [breadcrumbLd([['Home', '/'], ['Guides', '/guides/']])] });
@@ -173,7 +186,7 @@ ${reviewed}</article><aside class="side" aria-label="Advertisement">${adBox('sid
 }
 
 // ---------- write ----------
-for (const d of ['index.html', 'guides', 'flower-beds', 'tents-and-trees', 'sun-and-shade', 'garden-path', 'who-planted-what', 'archive', 'printable', 'about', 'contact', 'imprint', 'privacy', 'garden', 'assets/js', 'assets/css']) {
+for (const d of ['index.html', 'walkthrough', 'techniques', 'guides', 'flower-beds', 'tents-and-trees', 'sun-and-shade', 'garden-path', 'who-planted-what', 'archive', 'printable', 'about', 'contact', 'imprint', 'privacy', 'garden', 'assets/js', 'assets/css']) {
   rmSync(join(OUT, d), { recursive: true, force: true });
 }
 function write(rel, content) { const f = join(OUT, rel); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, content); }
@@ -186,12 +199,16 @@ const nf = notFound();
 write('404.html', page({ path: '/404.html', title: nf.title, description: nf.description, body: nf.html, noindex: true, canonical: false }));
 
 // old addresses of the previous site
-export const OLD = [['/about.html', '/about/'], ['/imprint.html', '/imprint/'], ['/privacy.html', '/privacy/'], ['/advertise.html', '/contact/'], ['/contact.html', '/contact/']];
+// and the seniors guide, merged into the beginners guide on 2026-11-18
+export const OLD = [['/about.html', '/about/'], ['/imprint.html', '/imprint/'], ['/privacy.html', '/privacy/'], ['/advertise.html', '/contact/'], ['/contact.html', '/contact/'],
+  ['/guides/logic-puzzles-for-seniors/', '/guides/logic-puzzles-for-beginners/#comfort']];
 for (const [from, to] of OLD) {
-  write(from.slice(1), page({ path: from, title: 'This page has moved – Daily Logic Garden', description: 'This address belonged to the previous version of Daily Logic Garden. The page now lives at a new address; you are being taken there automatically.', body: `<h1>This page has moved</h1><p>The content now lives at <a href="${to}">${SITE}${to}</a>.</p>`, noindex: true, canonical: to, refresh: to }));
+  write(from.endsWith('/') ? from.slice(1) + 'index.html' : from.slice(1), page({ path: from, title: 'This page has moved – Daily Logic Garden', description: 'This address belonged to an earlier version of Daily Logic Garden. The page now lives at a new address; you are being taken there automatically.', body: `<h1>This page has moved</h1><p>The content now lives at <a href="${to}">${SITE}${to}</a>.</p>`, noindex: true, canonical: to.split('#')[0], refresh: to }));
 }
 
 write('assets/js/garden.js', `/* Daily Logic Garden – puzzle engine and player (built ${V}) */\n` + ENGINE);
+write('assets/js/walk.js', `/* Daily Logic Garden – walkthrough (built ${V}) */\n` + minify(readFileSync(join(ROOT, 'src/js/walk.js'), 'utf8')));
+write('assets/js/finder.js', `/* Daily Logic Garden – technique finder with the counts of ${Object.values(STATS.data.counts).reduce((a, l) => a + l.length, 0)} boards (built ${V}) */\nwindow.DLG_TECHDATA=${JSON.stringify(finderData(STATS.data))};\n` + minify(readFileSync(join(ROOT, 'src/js/finder.js'), 'utf8')));
 write('assets/js/consent.js', readFileSync(join(ROOT, 'src/js/consent.js'), 'utf8'));
 write('assets/js/site.js', readFileSync(join(ROOT, 'src/js/site.js'), 'utf8'));
 write('assets/css/site.css', readFileSync(join(ROOT, 'src/assets/site.css'), 'utf8'));
@@ -201,7 +218,7 @@ write('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`)
 write('CNAME', 'dailylogicgarden.com'); // as committed on main (no trailing newline)
 write('.nojekyll', '');
 const indexable = pages.filter((p) => !p.noindex);
-write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${SITE}${p.path}</loc><lastmod>${CHANGED_0511.includes(p.path) ? '2026-11-05' : CHANGED_0411.includes(p.path) ? '2026-11-04' : REVIEWED}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${SITE}${p.path}</loc><lastmod>${modified(p.path)}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 writeFileSync(join(ROOT, 'build-report.json'), JSON.stringify(report, null, 1));
 console.log(`built ${pages.length} pages + 404 + ${OLD.length} redirects`);
 for (const r of report) console.log(String(r.words).padStart(5), r.kind.padEnd(6), r.path);

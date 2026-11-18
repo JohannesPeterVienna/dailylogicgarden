@@ -16,7 +16,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261105c">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261118a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Daily Logic Garden">
 <meta property="og:title" content="About Daily Logic Garden – Method, Publisher and Limits">
@@ -26,7 +26,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dailylogicgarden.com/"},{"@type":"ListItem","position":2,"name":"About","item":"https://dailylogicgarden.com/about/"}]}</script>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="brand" href="/"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#1A1A1A"/><path d="M20 31V17" stroke="#F1F4EC" stroke-width="2.4" stroke-linecap="round"/><path d="M20 22c-6 0-9-4-9-9 6 0 9 4 9 9zM20 19c0-6 4-9 9-9 0 6-4 9-9 9z" fill="#E3B23C"/><path d="M11 31h18" stroke="#F1F4EC" stroke-width="2" stroke-linecap="round"/></svg><span>Daily Logic Garden</span></a><nav class="main" aria-label="Main"><a href="/">Today</a><a href="/flower-beds/">Flower Beds</a><a href="/tents-and-trees/">Tents & Trees</a><a href="/sun-and-shade/">Sun & Shade</a><a href="/garden-path/">Garden Path</a><a href="/who-planted-what/">Who Planted What</a><a href="/guides/">Guides</a><a href="/archive/">Archive</a><a href="/garden/">My garden</a></nav></div></header>
+<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="brand" href="/"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#1A1A1A"/><path d="M20 31V17" stroke="#F1F4EC" stroke-width="2.4" stroke-linecap="round"/><path d="M20 22c-6 0-9-4-9-9 6 0 9 4 9 9zM20 19c0-6 4-9 9-9 0 6-4 9-9 9z" fill="#E3B23C"/><path d="M11 31h18" stroke="#F1F4EC" stroke-width="2" stroke-linecap="round"/></svg><span>Daily Logic Garden</span></a><nav class="main" aria-label="Main"><a href="/">Today</a><a href="/flower-beds/">Flower Beds</a><a href="/tents-and-trees/">Tents & Trees</a><a href="/sun-and-shade/">Sun & Shade</a><a href="/garden-path/">Garden Path</a><a href="/who-planted-what/">Who Planted What</a><a href="/guides/">Guides</a><a href="/walkthrough/">Walkthrough</a><a href="/archive/">Archive</a><a href="/garden/">My garden</a></nav></div></header>
 <main id="main"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><span aria-current="page">About</span></li></ol></nav><article class="prose"><span class="kicker">About &amp; method</span><h1>About Daily Logic Garden</h1><p class="lede">Daily Logic Garden publishes five daily logic puzzles with three levels each, plus guides on rules and solving technique. It is free, needs no account, and keeps your progress on your own device.</p>
 <h2 id="who">Who publishes the site</h2>
@@ -46,21 +46,22 @@
 <p>The automated tests generate the boards for 60 consecutive days for every puzzle and level and repeat these checks with a separate count. They also follow only the Why? hints from an empty board for 20 days per level and check that this solves the board and that every hint agrees with the solution, and they test hints from random partly filled and wrong boards: a wrong mark must be reported before any new step. The technique lists are described in the guides, for example <a href="/guides/star-battle-strategy/">Star Battle strategy</a>.</p>
 <h2 id="content">How the guides are written and checked</h2>
 <p>Guides are written for this site with the help of AI tools and describe the techniques our solver actually uses. Before a guide is published, a separate review pass checks its statements against the solver code, the generator output and the sources it names; anything that cannot be confirmed is corrected or removed. That review consists of independent AI review passes and automated tests – there is no team of human editors behind the site. AdStern, the publisher, decides what is published and is responsible for it.</p>
-<p>Numbers about our puzzles (board sizes, average steps, how often a technique was needed) come from running our generator on the 60 daily seeds from November 2 to December 31, 2026. Mathematical counts, such as the 34 valid rows of eight in a binary puzzle, were computed by our own code. Example boards in the figures are produced by the real generator when the site is built. Each page shows its review date; it changes when a page is checked again or corrected.</p>
+<p>Numbers about our puzzles (board sizes, average steps, how often a technique was needed) come from running our generator on the 60 daily seeds from November 2 to December 31, 2026. Mathematical counts, such as the 34 valid rows of eight in a binary puzzle, were computed by our own code. Example boards in the figures are produced by the real generator when the site is built. The counts on the <a href="/techniques/">technique reference</a> and in the beginners guide come from a longer run: the 150 daily boards of every puzzle and level from November 2, 2026 to March 31, 2027, 2,250 boards in all. The worked boards in the guides and every step of the <a href="/walkthrough/">walkthrough</a> are written by the solver itself, not by hand. Each page shows its review date; it changes when a page is checked again or corrected.</p>
 <h2 id="limits">Limits</h2>
 <p>The difficulty levels reflect our solver&rsquo;s technique order; a human may find another route. The daily switch depends on your device clock. Progress stored in the browser is lost if you clear site data, unless you exported it. We describe genres by their common names only so people can find the rules; we are not affiliated with any other puzzle publisher or game.</p>
 <h2 id="corrections">Corrections</h2>
-<p>Confirmed errors in puzzles, hints or guides are fixed and listed here with their date. No corrections have been necessary since the launch on November 2, 2026.</p>
+<p>Confirmed errors in puzzles, hints or guides are fixed and listed here with their date. Found an error? Write to us through the <a href="/contact/">contact page</a> and name the page, the puzzle, the level and the date.</p>
+<ul><li><b>November 18, 2026:</b> The Garden Path page listed three new ideas for Bloom boards. A count over 150 days showed that Bloom boards need only one of them (&ldquo;don&rsquo;t cut the garden in two&rdquo;); the table was corrected. On the same day the guide for seniors was merged into the beginners guide, and a few statements we could not back with our own data (typical solving times, what &ldquo;many players&rdquo; do) were removed.</li></ul>
 <h2 id="privacy">Your data</h2>
-<p>Puzzle progress and your garden stay in your browser&rsquo;s local storage. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p><p class="reviewed">Last updated: November 4, 2026</p></article>
+<p>Puzzle progress and your garden stay in your browser&rsquo;s local storage. Details on advertising and analytics are in the <a href="/privacy/">privacy policy</a>.</p><p class="reviewed">Last updated: November 18, 2026</p></article>
 </div></main>
 <footer class="site"><div class="wrap"><div class="cols">
 <div><h2>Play</h2><ul><li><a href="/flower-beds/">Flower Beds</a></li><li><a href="/tents-and-trees/">Tents &amp; Trees</a></li><li><a href="/sun-and-shade/">Sun &amp; Shade</a></li><li><a href="/garden-path/">Garden Path</a></li><li><a href="/who-planted-what/">Who Planted What</a></li></ul></div>
-<div><h2>More</h2><ul><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
+<div><h2>More</h2><ul><li><a href="/walkthrough/">Step-by-step walkthrough</a></li><li><a href="/techniques/">Technique reference</a></li><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
 <div><h2>About</h2><ul><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy policy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
 </div><p class="fine">Daily Logic Garden is published by AdStern, Vienna. Every puzzle is made by our own generator and checked for exactly one solution. Your progress stays in your browser.</p></div></footer>
-<script src="/assets/js/consent.js?v=20261105c" defer></script>
-<script src="/assets/js/site.js?v=20261105c" defer></script>
+<script src="/assets/js/consent.js?v=20261118a" defer></script>
+<script src="/assets/js/site.js?v=20261118a" defer></script>
 
 </body>
 </html>

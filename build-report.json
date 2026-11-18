@@ -2,7 +2,7 @@
  {
   "path": "/flower-beds/",
   "kind": "tool",
-  "words": 1356,
+  "words": 1341,
   "title": "Flower Beds – a Free Queens-Style Puzzle Every Day",
   "noindex": false,
   "ads": true,
@@ -29,7 +29,7 @@
  {
   "path": "/garden-path/",
   "kind": "tool",
-  "words": 982,
+  "words": 1679,
   "title": "Garden Path: Draw One Line Through Every Square",
   "noindex": false,
   "ads": true,
@@ -47,7 +47,7 @@
  {
   "path": "/archive/",
   "kind": "tool",
-  "words": 824,
+  "words": 838,
   "title": "Puzzle Archive: Every Daily Logic Garden by Date",
   "noindex": false,
   "ads": true,
@@ -56,11 +56,29 @@
  {
   "path": "/printable/",
   "kind": "tool",
-  "words": 825,
+  "words": 823,
   "title": "Printable Logic Puzzles: Free Weekly Garden Packs",
   "noindex": false,
   "ads": true,
   "minWords": 800
+ },
+ {
+  "path": "/walkthrough/",
+  "kind": "tool",
+  "words": 688,
+  "title": "Step-by-Step Walkthrough for Every Daily Logic Board",
+  "noindex": false,
+  "ads": true,
+  "minWords": 450
+ },
+ {
+  "path": "/techniques/",
+  "kind": "tool",
+  "words": 1663,
+  "title": "Logic Puzzle Techniques: What 2,250 Daily Boards Needed",
+  "noindex": false,
+  "ads": true,
+  "minWords": 600
  },
  {
   "path": "/guides/queens-style-puzzle-rules/",
@@ -74,7 +92,7 @@
  {
   "path": "/guides/star-battle-strategy/",
   "kind": "guide",
-  "words": 1052,
+  "words": 1091,
   "title": "Star Battle Strategy: 7 Techniques From Easy to Expert",
   "noindex": false,
   "ads": true,
@@ -92,7 +110,7 @@
  {
   "path": "/guides/tents-and-trees-rules-strategy/",
   "kind": "guide",
-  "words": 912,
+  "words": 1379,
   "title": "Tents and Trees Rules and Solving Strategy",
   "noindex": false,
   "ads": true,
@@ -101,7 +119,7 @@
  {
   "path": "/guides/binary-puzzle-rules/",
   "kind": "guide",
-  "words": 910,
+  "words": 1480,
   "title": "Binary Puzzle Rules: No Three in a Row, Equal Counts",
   "noindex": false,
   "ads": true,
@@ -110,7 +128,7 @@
  {
   "path": "/guides/solve-logic-grid-puzzles/",
   "kind": "guide",
-  "words": 990,
+  "words": 1755,
   "title": "How to Solve Logic Grid Puzzles Without Guessing",
   "noindex": false,
   "ads": true,
@@ -128,17 +146,8 @@
  {
   "path": "/guides/logic-puzzles-for-beginners/",
   "kind": "guide",
-  "words": 942,
+  "words": 1270,
   "title": "Logic Puzzles for Beginners: Where to Start",
-  "noindex": false,
-  "ads": true,
-  "minWords": 900
- },
- {
-  "path": "/guides/logic-puzzles-for-seniors/",
-  "kind": "guide",
-  "words": 935,
-  "title": "Logic Puzzles for Seniors: Large Grids, Calm Pace",
   "noindex": false,
   "ads": true,
   "minWords": 900
@@ -146,16 +155,16 @@
  {
   "path": "/",
   "kind": "home",
-  "words": 1001,
+  "words": 890,
   "title": "Daily Logic Garden – Today’s Five Logic Puzzles",
   "noindex": false,
   "ads": false,
-  "minWords": 800
+  "minWords": 500
  },
  {
   "path": "/guides/",
   "kind": "hub",
-  "words": 629,
+  "words": 693,
   "title": "Logic Puzzle Guides – Rules, Strategy and Techniques",
   "noindex": false,
   "ads": false,
@@ -173,7 +182,7 @@
  {
   "path": "/about/",
   "kind": "about",
-  "words": 1048,
+  "words": 1189,
   "title": "About Daily Logic Garden – Method, Publisher and Limits",
   "noindex": false,
   "ads": false,
@@ -200,7 +209,7 @@
  {
   "path": "/privacy/",
   "kind": "legal",
-  "words": 1856,
+  "words": 1861,
   "title": "Privacy Policy – Daily Logic Garden (Ads, Consent, Data)",
   "noindex": false,
   "ads": false,

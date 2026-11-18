@@ -68,10 +68,13 @@ for (const width of [390, 1366]) {
         const share = await page.locator('.share-text').innerText().catch(() => '');
         if (!/Solved in/.test(share)) fail('share text ' + u);
         // a second level renders too
-        await page.click('.lvl button[data-level="grove"]');
+        // the home page plays the same Flower Beds boards as /flower-beds/ (same saved level and progress), which this run
+        // has already left on Grove – so the second level tried there is Bloom
+        const second = u === '/' ? 'bloom' : 'grove';
+        await page.click('.lvl button[data-level="' + second + '"]');
         await page.waitForSelector('.cells, .lg-grids', { timeout: 30000 });
         await page.click('.btn.hint');
-        if (!(await page.locator('.hintbox:not([hidden])').count())) fail('grove hint ' + u);
+        if (!(await page.locator('.hintbox:not([hidden])').count())) fail(second + ' hint ' + u);
       }
     }
     const sinceLaunch = Math.round((Date.parse(new Date().toISOString().slice(0, 10)) - Date.parse('2026-11-02')) / 86400000) + 1;

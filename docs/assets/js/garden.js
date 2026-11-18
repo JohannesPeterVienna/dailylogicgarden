@@ -1,4 +1,4 @@
-/* Daily Logic Garden – puzzle engine and player (built 20261105c) */
+/* Daily Logic Garden – puzzle engine and player (built 20261118a) */
 (function (root, factory) {
 var api = factory();
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
@@ -1876,6 +1876,110 @@ label: label, clueText: clueText, solveLogic: solveLogic, countSolutions: countS
 var core = typeof module !== 'undefined' && module.exports ? require('./core.js') : root.DLG.core;
 var api = factory(core);
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
+else root.DLG.tech = api;
+})(this, function (core) {
+'use strict';
+var SB = '/guides/star-battle-strategy/', TT = '/guides/tents-and-trees-rules-strategy/', BP = '/guides/binary-puzzle-rules/', LG = '/guides/solve-logic-grid-puzzles/', GP = '/garden-path/';
+var LIST = {
+flowerbeds: [
+['last-spot', 'Last open square', 1, SB + '#t1-2'],
+['confined', 'Confinement', 2, SB + '#t3-4'],
+['touch-all', 'Touch-all', 2, SB + '#t5'],
+['k-confined', 'Beds and lines in groups', 3, '/guides/three-beds-three-rows/']
+],
+tents: [
+['no-tree', 'No tree beside it', 1, TT + '#sweep'],
+['line-full', 'Line complete', 1, TT + '#sweep'],
+['line-fill', 'Line must fill', 1, TT + '#sweep'],
+['lone-tree', 'Tree with one open side', 1, TT + '#sweep'],
+['line-fit', 'Fitting tents into a line', 2, TT + '#fit'],
+['pairing', 'Pairing', 2, TT + '#pairing'],
+['lookahead', 'One-tent look-ahead', 3, TT + '#lookahead']
+],
+sunshade: [
+['pair', 'Pair', 1, BP + '#basic'],
+['sandwich', 'Sandwich', 1, BP + '#basic'],
+['count', 'Count', 1, BP + '#basic'],
+['last-one', 'Last one', 2, BP + '#lastone'],
+['line', 'Full-line counting', 3, BP + '#full'],
+['cross', 'Line check against crossing lines', 3, BP + '#crossing']
+],
+gardenpath: [
+['forced', 'Two ways left', 1, GP + '#example'],
+['skip', 'No skipping a number', 1, GP + '#levels'],
+['loop', 'No closed loop', 1, GP + '#levels'],
+['bridge', 'Only way in', 2, GP + '#levels'],
+['dead-end', 'No dead end', 2, GP + '#levels'],
+['split', 'Don’t cut the garden', 2, GP + '#levels'],
+['order', 'Stone order', 3, GP + '#levels']
+],
+whoplanted: [
+['clue', 'Direct clue', 1, LG + '#direct'],
+['one-each', 'One per row and column', 1, LG + '#lines'],
+['transfer', 'Transfer between grids', 1, LG + '#transfer'],
+['either', 'Either – or', 2, LG + '#direct'],
+['ends', 'Ends of an ordering', 2, LG + '#order'],
+['either-way', 'Same result either way', 2, LG + '#transfer'],
+['fit', 'Positions that fit', 3, LG + '#order']
+]
+};
+var TYPES = ['flowerbeds', 'tents', 'sunshade', 'gardenpath', 'whoplanted'];
+var BY = {};
+TYPES.forEach(function (t) { BY[t] = {}; LIST[t].forEach(function (x, i) { BY[t][x[0]] = { id: x[0], name: x[1], tier: x[2], href: x[3], index: i }; }); });
+function get(type, id) { return (BY[type] && BY[type][id]) || null; }
+function ids(type) { return LIST[type].map(function (x) { return x[0]; }); }
+function blank(type, mod, p) {
+if (type === 'gardenpath') return { path: [p.solution[0]], pencil: {} };
+if (type === 'tents') return Array.from(mod.initial(mod.geom(p)));
+if (type === 'sunshade') return p.givens.slice();
+if (type === 'whoplanted') return new Array(mod.geom(p).size).fill(0);
+return new Array(p.n * p.n).fill(0);
+}
+function followPencil(mod, p, user) {
+var g = mod.geom(p);
+for (;;) {
+var head = user.path[user.path.length - 1], prev = user.path[user.path.length - 2], next = -1;
+g.cellEdges[head].forEach(function (e) {
+if (user.pencil[e] !== 1) return;
+var o = g.edges[e][0] === head ? g.edges[e][1] : g.edges[e][0];
+if (o !== prev && user.path.indexOf(o) < 0) next = o;
+});
+if (next < 0) break;
+user.path.push(next);
+}
+}
+function apply(type, mod, p, user, set) {
+if (type === 'gardenpath') { set.forEach(function (q) { user.pencil[q[0]] = q[1]; }); followPencil(mod, p, user); return; }
+set.forEach(function (q) { user[q[0]] = q[1]; });
+}
+function path(type, mod, p) {
+var user = blank(type, mod, p), steps = [], h;
+while ((h = mod.hint(p, user)).kind !== 'done') {
+if (!h.set || !h.set.length || steps.length > 3000) throw new Error('techniques: no path for ' + type + ' ' + p.level + ' ' + p.key);
+steps.push({ tech: h.kind === 'deduction' ? h.tech : 'reveal', tier: h.tier || 0, text: h.text, cells: h.cells || [], focus: h.focus || [], set: h.set });
+apply(type, mod, p, user, h.set);
+}
+return steps;
+}
+function stateAt(type, mod, p, steps, k) {
+var user = blank(type, mod, p);
+for (var i = 0; i < k && i < steps.length; i++) apply(type, mod, p, user, steps[i].set);
+return user;
+}
+function tally(type, steps) {
+var out = ids(type).map(function () { return 0; });
+steps.forEach(function (s) { var t = get(type, s.tech); if (t) out[t.index]++; });
+return out;
+}
+function listing(type, level, key, steps) {
+return steps.map(function (s, i) { var t = get(type, s.tech); return (i + 1) + '. [' + (t ? t.name : 'Reveal') + '] ' + s.text; }).join('\n');
+}
+return { LIST: LIST, TYPES: TYPES, get: get, ids: ids, blank: blank, followPencil: followPencil, apply: apply, path: path, stateAt: stateAt, tally: tally, listing: listing };
+});
+(function (root, factory) {
+var core = typeof module !== 'undefined' && module.exports ? require('./core.js') : root.DLG.core;
+var api = factory(core);
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.DLG.draw = api;
 })(this, function (core) {
 'use strict';
@@ -2292,14 +2396,7 @@ self.renderPrint();
 if (self.done) self.celebrate(false);
 }, 20);
 };
-G.blank = function () {
-var p = this.p;
-if (this.type === 'gardenpath') return { path: [p.solution[0]], pencil: {} };
-if (this.type === 'tents') return Array.from(this.mod.initial(this.mod.geom(p)));
-if (this.type === 'sunshade') return p.givens.slice();
-if (this.type === 'whoplanted') return new Array(this.mod.geom(p).size).fill(0);
-return new Array(p.n * p.n).fill(0);
-};
+G.blank = function () { return D.tech.blank(this.type, this.mod, this.p); };
 G.restore = function (u) { return this.type === 'gardenpath' ? { path: u.path.slice(), pencil: u.pencil || {} } : u.slice(); };
 G.snapshot = function () { return this.type === 'gardenpath' ? { path: this.user.path.slice(), pencil: JSON.parse(JSON.stringify(this.user.pencil)) } : this.user.slice(); };
 G.save = function () { store.set(this.saveKey(), { u: this.user, h: Math.min(saves.MAX_HINTS, this.hints), t: Math.min(saves.MAX_SECS, Math.round(this.secs)), s: this.done }); };
@@ -2362,6 +2459,8 @@ var self = this, h = this.mod.hint(this.p, this.user);
 this.hint = h;
 var label = h.kind === 'mistake' ? 'Check this:' : h.kind === 'done' ? 'Done:' : 'Why?';
 this.hintEl.innerHTML = '<p style="margin:0"><span class="why">' + label + '</span>' + h.text.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</p>';
+var tq = h.kind === 'deduction' ? D.tech.get(this.type, h.tech) : null;
+if (tq) this.hintEl.appendChild(el('p', { 'class': 'hint-tech' }, 'Technique: <a href="' + tq.href + '">' + tq.name + '</a> · ' + core.LEVEL_NAMES[core.LEVELS[tq.tier - 1]] + ' level'));
 if (h.kind === 'deduction' || h.kind === 'reveal' || h.kind === 'mistake') {
 var row = el('div', { 'class': 'row' });
 var apply = el('button', { type: 'button', 'class': 'btn small' }, h.kind === 'mistake' ? (this.type === 'gardenpath' ? 'Back up the path' : 'Clear that mark') : 'Apply this step');
@@ -2626,19 +2725,7 @@ for (var k = 0; k < n * n; k++) if (p.givens[k] || u[k]) filled++;
 if (!this.done) this.statusEl.textContent = filled + ' of ' + n * n + ' squares filled';
 }
 };
-G.followPencil = function () {
-var g = this.mod.geom(this.p), u = this.user;
-for (;;) {
-var head = u.path[u.path.length - 1], prev = u.path[u.path.length - 2], next = -1;
-g.cellEdges[head].forEach(function (e) {
-if (u.pencil[e] !== 1) return;
-var o = g.edges[e][0] === head ? g.edges[e][1] : g.edges[e][0];
-if (o !== prev && u.path.indexOf(o) < 0) next = o;
-});
-if (next < 0) break;
-u.path.push(next);
-}
-};
+G.followPencil = function () { D.tech.followPencil(this.mod, this.p, this.user); };
 G.pathStep = function (k) {
 var g = this.mod.geom(this.p), u = this.user, head = u.path[u.path.length - 1];
 var at = u.path.indexOf(k);
@@ -2949,6 +3036,7 @@ window.print();
 })(0);
 });
 }
+D.play = { Game: Game, RENDER: RENDER, META: META, TYPES: TYPES, LAUNCH: LAUNCH, el: el, today: today, longDate: longDate, validDate: validDate };
 function init() {
 Array.prototype.forEach.call(document.querySelectorAll('[data-game]'), function (r) { r.__game = new Game(r); });
 Array.prototype.forEach.call(document.querySelectorAll('[data-garden]'), renderGarden);

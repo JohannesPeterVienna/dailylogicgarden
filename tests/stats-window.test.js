@@ -488,6 +488,6 @@ test('built pages: ad pages carry data-stats="page", pages without ads "settings
   const privacy = read('privacy/index.html');
   assert.match(privacy, /<h2 id="statistics-window">Interim statistics window<\/h2>/);
   assert.match(privacy, /href="#statistics-window"/);
-  assert.match(privacy, /Last updated: November 5, 2026/);
+  assert.match(privacy, /Last updated: November 18, 2026/); // 2026-11-18: the list of pages that can show ads names the walkthrough and the technique reference
   assert.match(privacy, /<code>dlg-stats<\/code>/);
 });

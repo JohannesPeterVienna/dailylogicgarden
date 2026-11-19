@@ -63,6 +63,13 @@ for (const width of [390, 1366]) {
     await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowLeft');
     ok(/^Step 2 of /.test(await page.locator('.walk-head').innerText()), `${type} ${level}: arrow keys`);
     ok((await page.locator('.walk-list li[aria-current]').count()) === 1, `${type} ${level}: current step marked in the list`);
+    // outside the tool the keys belong to the page: nothing moves
+    await page.evaluate(() => { document.activeElement.blur(); });
+    await page.keyboard.press('End'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('Home');
+    ok(/^Step 2 of /.test(await page.locator('.walk-head').innerText()), `${type} ${level}: keys outside the tool are left alone`);
+    await page.locator('footer.site a').first().focus();
+    await page.keyboard.press('ArrowRight');
+    ok(/^Step 2 of /.test(await page.locator('.walk-head').innerText()), `${type} ${level}: keys on a link outside the tool are left alone`);
     ok((await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dlg:')).length)) === 0, `${type} ${level}: nothing stored`);
     await done(page, `walkthrough ${type} ${level}`);
   }
@@ -150,6 +157,15 @@ for (const width of [390, 1366]) {
     const t = page.locator('.hintbox .hint-tech');
     ok((await t.count()) === 1 && /^Technique: .+ · (Sprout|Bloom|Grove) level$/.test(await t.innerText()) && (await t.locator('a').getAttribute('href')).startsWith('/guides/tents-and-trees-rules-strategy/#'), 'hint names the technique');
     await done(page, 'hint technique');
+    // home: solving the board plants at once in the garden box and ticks today's card, without a reload
+    const home = await open('/');
+    await home.waitForSelector('.cells');
+    const before = await home.locator('[data-garden-meta]').innerText();
+    for (let i = 0; i < 300 && !(await home.locator('.solved:not([hidden])').count()); i++) { await home.click('.btn.hint'); await home.locator('.hintbox button').first().click(); }
+    const after = await home.locator('[data-garden-meta]').innerText();
+    ok(/Nothing ever wilts/.test(before) && /1 plant/.test(after), 'home garden box redrawn after solving: ' + after);
+    ok((await home.locator('[data-today="flowerbeds"] a.done').count()) === 1, 'home: today card ticked after solving');
+    await done(home, 'home garden');
     const p2 = await open('/guides/logic-puzzles-for-seniors/');
     await p2.waitForURL('**/guides/logic-puzzles-for-beginners/**');
     ok((await p2.locator('#comfort').count()) === 1, 'seniors address forwards to the comfort section');

@@ -40,6 +40,8 @@ export function summarize(data) {
       out[type][level] = {
         boards: rows.length,
         steps: rows.reduce((a, r) => a + r.reduce((x, y) => x + y, 0), 0) / rows.length,
+        min: Math.min(...rows.map((r) => r.reduce((x, y) => x + y, 0))),
+        max: Math.max(...rows.map((r) => r.reduce((x, y) => x + y, 0))),
         tech: ids.map((id, i) => ({ id, boards: rows.filter((r) => r[i] > 0).length, uses: rows.reduce((a, r) => a + r[i], 0) }))
       };
     }

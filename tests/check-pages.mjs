@@ -44,7 +44,8 @@ for (const url of sitemapUrls) {
     const lastmod = get(sitemap, new RegExp('<loc>' + url.replace(/[.?]/g, '\\$&') + '</loc><lastmod>([^<]+)</lastmod>'));
     ok(['2026-11-02', '2026-11-18'].includes(lastmod) && h.includes(lastmod === '2026-11-18' ? 'Reviewed November 18, 2026' : 'Reviewed November 2, 2026'), 'reviewed line ' + path);
     ok(h.includes('"@type":"FAQPage"') && h.includes('"@type":"BreadcrumbList"') && h.includes('"dateModified":"' + lastmod + '"'), 'json-ld ' + path);
-    ok(h.includes(r.kind === 'tool' ? '"@type":"WebApplication"' : '"@type":"Article"'), 'type json-ld ' + path);
+    ok(h.includes(r.kind === 'tool' && path !== '/techniques/' ? '"@type":"WebApplication"' : '"@type":"Article"'), 'type json-ld ' + path);
+    if (path === '/techniques/') ok(!h.includes('GameApplication'), 'reference page is not marked up as a game');
     ok(/Sources and further reading/.test(h), 'sources ' + path);
     // ad placement order: tools – game, then a text section, then the first slot; guides – lede, slot, sections, mid slot
     if (r.kind === 'tool') {
@@ -96,11 +97,9 @@ ok(existsSync(join(DOCS, 'assets/fonts/OFL-Fraunces.txt')) && existsSync(join(DO
 ok(/afterplay: '7497607759'[\s\S]*lede: '7497607759'[\s\S]*mid: '1292301217'[\s\S]*side: '1292301217'/.test(readFileSync(join(DOCS, 'assets/js/site.js'), 'utf8')), 'ad slot IDs set');
 // page weight: html + css + js + preloaded fonts
 const shared = ['assets/css/site.css', 'assets/js/consent.js', 'assets/js/site.js', 'assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2', 'assets/fonts/fraunces-latin-700-normal.woff2', 'assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2'].reduce((s, f) => s + statSync(join(DOCS, f)).size, 0);
-const engine = statSync(join(DOCS, 'assets/js/garden.js')).size;
 let heaviest = 0;
 for (const url of sitemapUrls) { const h = readFileSync(fileFor(url.replace(SITE, '')), 'utf8'); heaviest = Math.max(heaviest, h.length + shared + ['garden.js', 'walk.js', 'finder.js'].reduce((a, f) => a + (h.includes('/assets/js/' + f) ? statSync(join(DOCS, 'assets/js', f)).size : 0), 0)); }
 // 300 KB until 2026-11-18; the walkthrough page loads the engine plus walk.js and carries a worked board, hence 320 KB
 ok(heaviest < 320 * 1024, 'page weight ' + heaviest);
-void engine;
 console.log(`check-pages: ${checks - fails}/${checks} checks passed; heaviest page ${(heaviest / 1024).toFixed(0)} KB; ${sitemapUrls.length} sitemap URLs`);
 if (fails) process.exit(1);

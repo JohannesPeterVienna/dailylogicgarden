@@ -200,7 +200,7 @@ if (unit.cells.indexOf(x) >= 0 || hasFlower(s, unit.cells)) continue;
 var open = openCells(s, unit.cells);
 if (open.length && open.every(function (y) { return nearSet[y]; })) {
 return { tier: 2, tech: 'touch-all', set: [[x, 2]], focus: open.concat([x]), mark: [x],
-text: 'A flower on ' + cn(Math.floor(x / n), x % n) + ' would touch or share a line with every open square of ' + unit.name + ', leaving it no place for its flower, so ' + cn(Math.floor(x / n), x % n) + ' stays empty.' };
+text: 'A flower on ' + cn(Math.floor(x / n), x % n) + ' would touch, share a line or share a bed with every open square of ' + unit.name + ', leaving it no place for its flower, so ' + cn(Math.floor(x / n), x % n) + ' stays empty.' };
 }
 }
 }
@@ -1905,7 +1905,7 @@ sunshade: [
 ['cross', 'Line check against crossing lines', 3, BP + '#crossing']
 ],
 gardenpath: [
-['forced', 'Two ways left', 1, GP + '#example'],
+['forced', 'Only ways left', 1, GP + '#example'],
 ['skip', 'No skipping a number', 1, GP + '#levels'],
 ['loop', 'No closed loop', 1, GP + '#levels'],
 ['bridge', 'Only way in', 2, GP + '#levels'],
@@ -2449,6 +2449,8 @@ if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) { navigator.sh
 if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, function () { window.prompt('Copy your result:', txt); });
 else window.prompt('Copy your result:', txt);
 });
+Array.prototype.forEach.call(document.querySelectorAll('[data-garden]'), renderGarden);
+Array.prototype.forEach.call(document.querySelectorAll('[data-today-box]'), renderToday);
 this.refresh();
 if (fresh) this.statusEl.textContent = 'Solved! ' + m.name + ' ' + core.LEVEL_NAMES[this.level] + ' is complete.';
 };

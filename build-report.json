@@ -74,7 +74,7 @@
  {
   "path": "/techniques/",
   "kind": "tool",
-  "words": 1663,
+  "words": 1674,
   "title": "Logic Puzzle Techniques: What 2,250 Daily Boards Needed",
   "noindex": false,
   "ads": true,
@@ -92,7 +92,7 @@
  {
   "path": "/guides/star-battle-strategy/",
   "kind": "guide",
-  "words": 1091,
+  "words": 1094,
   "title": "Star Battle Strategy: 7 Techniques From Easy to Expert",
   "noindex": false,
   "ads": true,
@@ -146,7 +146,7 @@
  {
   "path": "/guides/logic-puzzles-for-beginners/",
   "kind": "guide",
-  "words": 1270,
+  "words": 1276,
   "title": "Logic Puzzles for Beginners: Where to Start",
   "noindex": false,
   "ads": true,
@@ -155,11 +155,11 @@
  {
   "path": "/",
   "kind": "home",
-  "words": 890,
+  "words": 883,
   "title": "Daily Logic Garden – Today’s Five Logic Puzzles",
   "noindex": false,
   "ads": false,
-  "minWords": 500
+  "minWords": 800
  },
  {
   "path": "/guides/",

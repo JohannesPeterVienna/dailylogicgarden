@@ -21,7 +21,7 @@ export const IDEAS = {
   flowerbeds: { 'last-spot': 'A row, column or bed with one open square left gets its flower there.', confined: 'A bed whose open squares lie in one line owns that line; a line whose open squares lie in one bed owns that bed.', 'touch-all': 'A square whose flower would block every open square of some row, column or bed stays empty.', 'k-confined': 'Two or more beds squeezed into the same number of rows or columns reserve those lines, and the other way round.' },
   tents: { 'no-tree': 'A square with no tree on any of its four sides is grass.', 'line-full': 'A row or column that already has its number of tents gets grass everywhere else.', 'line-fill': 'A row or column with exactly as many open squares as missing tents gets tents on all of them.', 'lone-tree': 'A tree without a tent and with one open side gets its tent there.', 'line-fit': 'Every way to fit the missing tents into a line without two side by side agrees on some squares.', pairing: 'Each tent belongs to one tree: a square whose trees are all taken is grass, and a tree whose neighboring tent belongs to another tree still needs its own.', lookahead: 'A tent that would leave a line or a tree without enough room is ruled out.' },
   sunshade: { pair: 'Two equal symbols side by side: the squares at both ends are the other symbol.', sandwich: 'Two equal symbols with one gap: the gap is the other symbol.', count: 'A line that has half of one symbol gets the other symbol on every open square.', 'last-one': 'A line missing a single symbol of one kind: it can only go where the rest does not form three in a row.', line: 'A line missing two or more of each kind: the squares that every valid way to finish it shares are decided.', cross: 'Ways to finish a line that would leave a crossing line impossible are dropped; what the remaining ways share is decided.' },
-  gardenpath: { forced: 'A square with only two usable neighbors (one for an end stone) must use them.', skip: 'Two stones whose numbers are not consecutive are never joined directly.', loop: 'The two ends of one stretch of path are never joined.', bridge: 'A group of squares that can be reached through a single step forces that step.', 'dead-end': 'A step that would take away a connection another square still needs is never used.', split: 'A step that would cut the garden into two parts one path cannot both cover is never used.', order: 'Joining two stretches of path so that the stones come out of order is never possible.' },
+  gardenpath: { forced: 'A square with only as many usable neighbors as it needs – two, or one for a stone at an end of the path – must use them.', skip: 'Two stones whose numbers are not consecutive are never joined directly.', loop: 'The two ends of one stretch of path are never joined.', bridge: 'A group of squares that can be reached through a single step forces that step.', 'dead-end': 'A step that would take away a connection another square still needs is never used.', split: 'A step that would cut the garden into two parts one path cannot both cover is never used.', order: 'Joining two stretches of path so that the stones come out of order is never possible.' },
   whoplanted: { clue: 'What a clue states outright is entered as ● or ✕.', 'one-each': 'A ● crosses out the rest of its row and column; a row with one open square gets the ●.', transfer: 'Two items that belong together share every ● and ✕.', either: 'When one option of an either-or clue is ruled out, the other one holds.', ends: 'Whoever comes before someone is not last; whoever comes after someone is not first.', 'either-way': 'If every option that is still open for an item excludes the same partner, that partner is excluded.', fit: 'For an ordering clue, a position with no possible partner position is removed.' }
 };
 
@@ -101,7 +101,7 @@ function unused(S) {
 
 // compact table for the beginners guide: what a Sprout board asks for
 export function sproutTable(S) {
-  const skill = { sunshade: 'Spotting pairs', flowerbeds: 'Finding the last open square', tents: 'Reading the row and column numbers', gardenpath: 'Squares with two ways left', whoplanted: 'Entering clues as ✕ and ●' };
+  const skill = { sunshade: 'Spotting pairs', flowerbeds: 'Finding the last open square', tents: 'Reading the row and column numbers', gardenpath: 'Squares with only two ways left', whoplanted: 'Entering clues as ✕ and ●' };
   const size = { sunshade: '6 × 6', flowerbeds: '6 × 6', tents: '6 × 6', gardenpath: '5 × 5', whoplanted: 'three 4 × 4 grids' };
   const rows = ['sunshade', 'flowerbeds', 'tents', 'gardenpath', 'whoplanted'].map((type) => {
     const lv = S[type].sprout;
@@ -119,7 +119,7 @@ export function referencePages(S) {
   const neverText = never.map((x) => `&ldquo;${esc(tech.get(x.type, x.id).name)}&rdquo; in ${esc(NAMES[x.type])} (${x.boards === 0 ? 'never' : x.boards + ' of 450 boards'})`);
   const gv = (type, id) => S[type].grove.tech[tech.get(type, id).index];
   const walkthrough = {
-    path: '/walkthrough/', crumb: 'Walkthrough', js: 'walk', appName: 'Daily Logic Garden walkthrough', kicker: 'Tool · solution paths', minWords: 450,
+    path: '/walkthrough/', crumb: 'Walkthrough', js: 'walk', appCategory: 'EducationalApplication', appName: 'Daily Logic Garden walkthrough', kicker: 'Tool · solution paths', minWords: 450,
     title: 'Step-by-Step Walkthrough for Every Daily Logic Board',
     description: 'Replay any Daily Logic Garden board since launch step by step: each move with the technique name and its reason, a link to that exact step, and a print view.',
     h1: 'Walkthrough: any daily board, one deduction at a time',
@@ -151,7 +151,7 @@ ${frameFig(ex, ex.steps.length + 1, '')}
     sources: [ABOUT, 'The step texts and pictures on this page are produced by the site&rsquo;s own solver when the site is built; the technique names are listed on the <a href="/techniques/">technique reference</a>.']
   };
   const techniques = {
-    path: '/techniques/', crumb: 'Techniques', js: 'finder', appName: 'Daily Logic Garden technique finder', kicker: 'Reference · measured on our own boards', minWords: 600,
+    path: '/techniques/', crumb: 'Techniques', js: 'finder', article: true, appName: 'Daily Logic Garden technique finder', kicker: 'Reference · measured on our own boards', minWords: 600,
     title: 'Logic Puzzle Techniques: What 2,250 Daily Boards Needed',
     description: 'All 31 solving techniques behind our five daily puzzles, with counts from 2,250 generated boards: how many boards needed each one, and where to practice it.',
     h1: 'The 31 techniques behind our puzzles, and how often boards need them',

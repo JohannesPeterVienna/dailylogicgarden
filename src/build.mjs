@@ -151,7 +151,9 @@ ${sourcesHtml(t.sources)}
 ${reviewed(t.path)}</div></article><div class="print-root print-only"></div>`;
   addPage({
     path: t.path, title: t.title, description: t.description, body, ads: true, adsense: true, kind: 'tool', minWords: t.minWords || 800, text: t.sections.join(' ') + t.faq.map((f) => f.join(' ')).join(' '),
-    jsonld: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: t.appName || t.crumb, url: SITE + t.path, description: t.description, applicationCategory: 'GameApplication', operatingSystem: 'Any (web browser)', isAccessibleForFree: true, dateModified: modified(t.path), publisher: PUBLISHER, inLanguage: 'en-US' }, breadcrumbLd(list), faqLd(t.faq)],
+    jsonld: [t.article
+      ? { '@context': 'https://schema.org', '@type': 'Article', headline: t.h1.replace(/<[^>]+>/g, ''), description: t.description, url: SITE + t.path, datePublished: '2026-11-18', dateModified: modified(t.path), author: { '@type': 'Organization', name: 'Daily Logic Garden', url: SITE + '/about/' }, publisher: PUBLISHER, inLanguage: 'en-US', mainEntityOfPage: SITE + t.path }
+      : { '@context': 'https://schema.org', '@type': 'WebApplication', name: t.appName || t.crumb, url: SITE + t.path, description: t.description, applicationCategory: t.appCategory || 'GameApplication', operatingSystem: 'Any (web browser)', isAccessibleForFree: true, dateModified: modified(t.path), publisher: PUBLISHER, inLanguage: 'en-US' }, breadcrumbLd(list), faqLd(t.faq)],
     scripts: t.js === 'finder' ? `<script src="/assets/js/finder.js?v=${V}" defer></script>` : t.js === 'walk' ? GAME_JS + `\n<script src="/assets/js/walk.js?v=${V}" defer></script>` : GAME_JS
   });
 }
@@ -173,7 +175,7 @@ ${reviewed(g.path)}</article><aside class="side" aria-label="Advertisement">${ad
 }
 {
   const h = home();
-  addPage({ path: '/', title: h.title, description: h.description, body: h.html + '<div class="print-root print-only"></div>', ads: false, adsense: true, kind: 'home', minWords: 500, text: h.html,
+  addPage({ path: '/', title: h.title, description: h.description, body: h.html + '<div class="print-root print-only"></div>', ads: false, adsense: true, kind: 'home', minWords: 800, text: h.html,
     jsonld: [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Daily Logic Garden', url: SITE + '/', description: h.description, publisher: PUBLISHER, inLanguage: 'en-US' }], scripts: GAME_JS });
   const hub = guidesHub(GUIDES, TOOLS);
   addPage({ path: '/guides/', title: hub.title, description: hub.description, body: crumbs([['Home', '/'], ['Guides', '/guides/']]) + hub.html, kind: 'hub', adsense: true, minWords: 220, text: hub.html, jsonld: [breadcrumbLd([['Home', '/'], ['Guides', '/guides/']])] });

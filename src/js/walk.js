@@ -39,7 +39,8 @@
       if (!self.steps || ev.altKey || ev.ctrlKey || ev.metaKey) return;
       var tag = (ev.target && ev.target.tagName) || '';
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-      if (ev.target && ev.target.closest && ev.target.closest('.cells, .lg-grids')) return;
+      // only while the focus is inside the tool; elsewhere Home, End and the arrows keep scrolling the page
+      if (!ev.target || !ev.target.closest || !ev.target.closest('[data-walk]') || ev.target.closest('.cells, .lg-grids')) return;
       if (ev.key === 'ArrowRight') self.go(self.pos + 1);
       else if (ev.key === 'ArrowLeft') self.go(self.pos - 1);
       else if (ev.key === 'Home') self.go(1);
@@ -213,12 +214,15 @@
     } else {
       this.box.appendChild(el('p', { 'class': 'walk-head' }, 'Solved'));
       var done = el('p', { style: 'margin:0' });
-      done.appendChild(text('The board is complete after ' + core.plural(n, 'step') + '. Every step above was a deduction from the rules; nothing was guessed.'));
+      done.appendChild(text('The board is complete after ' + core.plural(n, 'step') + (this.steps.some(function (x) { return x.tech === 'reveal'; }) ? '.' : '. Every step above was a deduction from the rules; nothing was guessed.')));
       this.box.appendChild(done);
       this.statusEl.textContent = '';
     }
+    // a button that is about to be switched off hands the focus to its counterpart, so the keys keep working
+    var act = document.activeElement, held = act === this.bFirst || act === this.bPrev || act === this.bNext || act === this.bLast;
     this.bFirst.disabled = this.bPrev.disabled = pos === 1;
     this.bNext.disabled = this.bLast.disabled = pos === n + 1;
+    if (held && act.disabled) (pos === 1 ? this.bNext : this.bPrev).focus();
     Array.prototype.forEach.call(this.list.children, function (li, i) { if (i === pos - 1) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
     var isToday = this.key === play.today();
     this.note.textContent = (isToday ? 'Today’s board – stepping through it shows its solution · ' : '') + play.longDate(this.key) + ' (UTC)';

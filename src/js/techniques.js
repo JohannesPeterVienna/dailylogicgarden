@@ -38,7 +38,7 @@
       ['cross', 'Line check against crossing lines', 3, BP + '#crossing']
     ],
     gardenpath: [
-      ['forced', 'Two ways left', 1, GP + '#example'],
+      ['forced', 'Only ways left', 1, GP + '#example'],
       ['skip', 'No skipping a number', 1, GP + '#levels'],
       ['loop', 'No closed loop', 1, GP + '#levels'],
       ['bridge', 'Only way in', 2, GP + '#levels'],

@@ -119,7 +119,7 @@
         var open = openCells(s, unit.cells);
         if (open.length && open.every(function (y) { return nearSet[y]; })) {
           return { tier: 2, tech: 'touch-all', set: [[x, 2]], focus: open.concat([x]), mark: [x],
-            text: 'A flower on ' + cn(Math.floor(x / n), x % n) + ' would touch or share a line with every open square of ' + unit.name + ', leaving it no place for its flower, so ' + cn(Math.floor(x / n), x % n) + ' stays empty.' };
+            text: 'A flower on ' + cn(Math.floor(x / n), x % n) + ' would touch, share a line or share a bed with every open square of ' + unit.name + ', leaving it no place for its flower, so ' + cn(Math.floor(x / n), x % n) + ' stays empty.' };
         }
       }
     }

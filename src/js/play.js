@@ -187,6 +187,9 @@
       if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, function () { window.prompt('Copy your result:', txt); });
       else window.prompt('Copy your result:', txt);
     });
+    // a garden box or today's overview on the same page (home) shows the new plant at once
+    Array.prototype.forEach.call(document.querySelectorAll('[data-garden]'), renderGarden);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-today-box]'), renderToday);
     this.refresh();
     if (fresh) this.statusEl.textContent = 'Solved! ' + m.name + ' ' + core.LEVEL_NAMES[this.level] + ' is complete.';
   };

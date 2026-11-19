@@ -17,7 +17,7 @@ const REVIEWED = '2026-11-02';
 const REVIEWED_TEXT = 'November 2, 2026';
 const PUB = 'ca-pub-7811071715414905';
 const GA = 'G-T00HRG2YVF';
-const V = '20261118a';
+const V = '20261119a';
 // Pages whose content changed on 2026-11-04 (home and About texts) and 2026-11-05 (privacy: interim statistics window): sitemap lastmod.
 const CHANGED_0411 = ['/', '/about/'];
 const CHANGED_0511 = ['/privacy/'];
@@ -80,8 +80,25 @@ function faqLd(faq) {
 }
 const PUBLISHER = { '@type': 'Organization', name: 'AdStern – Agentur für digitales Marketing', url: SITE + '/about/' };
 function adBox(slot) { return `<div class="ad" data-slot="${slot}" hidden><span class="ad-label">Advertisement</span></div>`; }
+// Sizes of the two fixed placements, set the way AdSense help 9183363 describes ("exact size per screen width":
+// a class on the <ins>, CSS media queries in a <style> element of the page – not in the external style sheet).
+// top: 320x100 on phones (320x50 on short screens), 728x90 from 800 px, 970x90 from 1024 px; guides (text pages
+// without a tool) get 970x250 from 1024 px if the window is at least 740 px high, so heading and introduction stay
+// in the first screen. Below 352 px a 320 px unit does not fit: no unit, no request (same help page, "Hiding an ad unit").
+// side: 300x600 in the side column of the guides (from 1200 px, see site.js and site.css).
+function adSizes(kind) {
+  // [media query, width, height, margin below]; later entries win
+  const steps = [['', 320, 100, 16], ['(max-width:799px) and (max-height:699px)', 320, 50, 16], ['(min-width:800px)', 728, 90, 24], ['(min-width:1024px)', 970, 90, 24]];
+  if (kind === 'guide') steps.push(['(min-width:1024px) and (min-height:740px)', 970, 250, 24]);
+  const wrap = (m, css) => (m ? `@media ${m}{${css}}` : css);
+  const unit = steps.map(([m, w, h, mb]) => wrap(m, `.dlg_top{${m ? '' : 'display:block;'}width:${w}px;height:${h}px;margin:22px auto ${mb}px}`)).join('') + '@media (max-width:351px){.dlg_top{display:none}}';
+  // Until site.js has put the <ins> into the container (a few milliseconds after the first paint) the container keeps
+  // exactly the height the unit will have, so the page below does not move. Only where scripts run; not below 352 px.
+  const hold = steps.map(([m, , h, mb]) => wrap(m, `.ad[data-slot="top"][hidden]{${m ? '' : 'display:block;'}height:${22 + h + mb}px}`)).join('') + '@media (max-width:351px){.ad[data-slot="top"][hidden]{display:none}}';
+  return `<style>${unit}@media (scripting:enabled){${hold}}${kind === 'guide' ? '.dlg_side{display:block;width:300px;height:600px;margin:0 auto}' : ''}</style>`;
+}
 
-function page({ path, title, description, body, ads = false, adsense = false, noindex = false, canonical = true, jsonld = [], scripts = '', refresh = null }) {
+function page({ path, title, description, body, kind = '', ads = false, adsense = false, noindex = false, canonical = true, jsonld = [], scripts = '', refresh = null }) {
   return `<!doctype html>
 <html lang="en-US" data-ads="${ads ? 'yes' : 'no'}" data-stats="${adsense ? 'page' : 'settings'}">
 <head>
@@ -101,6 +118,7 @@ ${adsense ? ADSENSE : ''}
 <link rel="preload" href="/assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/fraunces-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css?v=${V}">
+${ads ? adSizes(kind) : ''}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Daily Logic Garden">
 <meta property="og:title" content="${esc(title)}">
@@ -112,7 +130,7 @@ ${jsonld.map(ld).join('\n')}
 <body>
 ${header(path)}
 <main id="main"><div class="wrap">
-${body}
+${ads ? adBox('top') + '\n' : ''}${body}
 </div></main>
 ${footer()}
 <script src="/assets/js/consent.js?v=${V}" defer></script>
@@ -161,8 +179,9 @@ for (const g of GUIDES) {
   const list = [['Home', '/'], ['Guides', '/guides/'], [g.crumb, g.path]];
   const mid = Math.ceil(g.sections.length / 2);
   const body = `<div class="layout has-side"><article class="prose">${crumbs(list)}<span class="kicker">${g.kicker}</span><h1>${g.h1}</h1><p class="lede">${g.lede}</p>
+${g.sections[0]}
 ${adBox('lede')}
-${g.sections.slice(0, mid).join('\n')}
+${g.sections.slice(1, mid).join('\n')}
 ${adBox('mid')}
 ${g.sections.slice(mid).join('\n')}
 ${faqHtml(g.faq)}
@@ -175,10 +194,10 @@ ${reviewed(g.path)}</article><aside class="side" aria-label="Advertisement">${ad
 }
 {
   const h = home();
-  addPage({ path: '/', title: h.title, description: h.description, body: h.html + '<div class="print-root print-only"></div>', ads: false, adsense: true, kind: 'home', minWords: 800, text: h.html,
+  addPage({ path: '/', title: h.title, description: h.description, body: h.html + '<div class="print-root print-only"></div>', ads: true, adsense: true, kind: 'home', minWords: 800, text: h.html,
     jsonld: [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Daily Logic Garden', url: SITE + '/', description: h.description, publisher: PUBLISHER, inLanguage: 'en-US' }], scripts: GAME_JS });
   const hub = guidesHub(GUIDES, TOOLS);
-  addPage({ path: '/guides/', title: hub.title, description: hub.description, body: crumbs([['Home', '/'], ['Guides', '/guides/']]) + hub.html, kind: 'hub', adsense: true, minWords: 220, text: hub.html, jsonld: [breadcrumbLd([['Home', '/'], ['Guides', '/guides/']])] });
+  addPage({ path: '/guides/', title: hub.title, description: hub.description, body: crumbs([['Home', '/'], ['Guides', '/guides/']]) + hub.html, kind: 'hub', ads: true, adsense: true, minWords: 220, text: hub.html, jsonld: [breadcrumbLd([['Home', '/'], ['Guides', '/guides/']])] });
   const gp = gardenPage();
   addPage({ path: '/garden/', title: gp.title, description: gp.description, body: crumbs([['Home', '/'], ['My garden', '/garden/']]) + gp.html, noindex: true, kind: 'garden', text: gp.html, scripts: GAME_JS });
   for (const s of STATIC) {

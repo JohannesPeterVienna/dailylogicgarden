@@ -22,10 +22,14 @@
   var SLOTS = {
     // Shared responsive AdSense units “Themen-Websites – …” (account pub-7811071715414905)
     afterplay: '7497607759', // below the first explanation on puzzle pages, never next to the board
-    lede: '7497607759',      // guides: after the introduction
+    lede: '7497607759',      // guides: after the first section
     mid: '1292301217',       // guides: in the middle of the article
-    side: '1292301217'       // guides: sidebar from 1200 px, not sticky
+    side: '1292301217',      // guides: sidebar from 1200 px, 300x600; sticky only as site.css allows (desktop, mouse)
+    top: '7497607759'        // below the site header, above the page heading
   };
+  // Placements with an exact size per screen width: class dlg_<name> on the <ins>, sizes in the <style> element of the
+  // page (AdSense help 9183363); such units carry neither data-ad-format nor data-full-width-responsive.
+  var SIZED = { top: 1, side: 1 };
   var GA_ID = 'G-T00HRG2YVF', OFF = 'ga-disable-' + GA_ID;
   var html = document.documentElement;
   var adsAllowed = html.getAttribute('data-ads') === 'yes';
@@ -50,11 +54,11 @@
       var name = box.getAttribute('data-slot'), id = SLOTS[name];
       if (!id || (name === 'side' && !wide)) return;
       var ins = document.createElement('ins');
-      ins.className = 'adsbygoogle';
-      ins.style.display = 'block';
+      ins.className = 'adsbygoogle' + (SIZED[name] ? ' dlg_' + name : '');
+      if (!SIZED[name]) ins.style.display = 'block';
       ins.setAttribute('data-ad-client', CLIENT);
       ins.setAttribute('data-ad-slot', id);
-      if (name !== 'side') { ins.setAttribute('data-ad-format', 'auto'); ins.setAttribute('data-full-width-responsive', 'true'); }
+      if (!SIZED[name]) { ins.setAttribute('data-ad-format', 'auto'); ins.setAttribute('data-full-width-responsive', 'true'); }
       box.appendChild(ins);
       box.hidden = false;
       untilFilled(box, ins);

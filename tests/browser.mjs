@@ -131,8 +131,9 @@ for (const width of [390, 1366]) {
     const d = await page.evaluate(() => {
       const ads = [...document.querySelectorAll('.ad')];
       ads.forEach((a) => {
-        a.hidden = false; a.style.minHeight = '250px'; a.style.background = 'rgba(200,0,0,.08)';
         let ins = a.querySelector('ins.adsbygoogle');
+        // responsive units get 250 px; the sized ones (top, side) already have their size from the page's <style>
+        a.hidden = false; if (!ins || !/dlg_/.test(ins.className)) a.style.minHeight = '250px'; a.style.background = 'rgba(200,0,0,.08)';
         if (!ins) { ins = document.createElement('ins'); ins.className = 'adsbygoogle'; a.appendChild(ins); }
         ins.setAttribute('data-ad-status', 'filled');
       });
@@ -164,6 +165,7 @@ for (const width of [390, 1366]) {
 }
 // ad containers with a stubbed adsbygoogle.js that never fills: no status → ins visible, no label/margin;
 // "unfilled" → ins display:none; "filled"/"unfill-optimized" → container with its "Advertisement" label and its 48 px margin
+// (top and side keep 0 margin: top has its distance in the unit itself so that a delivered ad moves nothing)
 for (const width of [390, 1366]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   await ctx.route('**/*', (route) => (route.request().url().startsWith(BASE) ? route.continue() : route.fulfill({ status: 200, contentType: 'text/javascript', body: '/* stub: no ad */' })));
@@ -197,7 +199,8 @@ for (const width of [390, 1366]) {
     }, { root: 'no-has', box: 'ad-on' });
     const kept = (l) => l.every((x) => x.display !== 'none' && x.vis === 'visible' && x.boxVis === 'visible' && x.w > 0 && x.overflow === 'visible/visible' && x.boxH >= x.insH - 0.5);
     const bare = (l) => l.every((x) => !x.label && !x.mt && !x.mb && !x.bt && !x.cls);
-    const shown = (l) => l.every((x) => x.label && x.boxH > 0 && x.cls && (x.mt === 48));
+    const shown = (l) => l.every((x) => x.label && x.boxH > 0 && x.cls && (x.mt === (['top', 'side'].includes(x.slot) ? 0 : 48)));
+    if (!r.none.some((x) => x.slot === 'top' && x.insH >= 50)) fail('top placement must keep its size before Google answers: ' + JSON.stringify(r.none) + ` ${u} @${width}`);
     const gone = (l) => l.every((x) => x.display === 'none' && !x.label && x.boxH === 0);
     if (!r.n) fail('no ad box filled in' + ` ${u} @${width}`);
     if (!kept(r.none) || !bare(r.none)) fail('without status the ins must stay visible and unclipped, label/rule/margin hidden: ' + JSON.stringify(r.none) + ` ${u} @${width}`);

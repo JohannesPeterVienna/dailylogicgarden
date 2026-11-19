@@ -158,7 +158,7 @@
   "words": 883,
   "title": "Daily Logic Garden – Today’s Five Logic Puzzles",
   "noindex": false,
-  "ads": false,
+  "ads": true,
   "minWords": 800
  },
  {
@@ -167,7 +167,7 @@
   "words": 693,
   "title": "Logic Puzzle Guides – Rules, Strategy and Techniques",
   "noindex": false,
-  "ads": false,
+  "ads": true,
   "minWords": 220
  },
  {

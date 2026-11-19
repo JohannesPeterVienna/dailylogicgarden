@@ -1,4 +1,4 @@
-/* Daily Logic Garden – puzzle engine and player (built 20261118a) */
+/* Daily Logic Garden – puzzle engine and player (built 20261119a) */
 (function (root, factory) {
 var api = factory();
 if (typeof module !== 'undefined' && module.exports) module.exports = api;

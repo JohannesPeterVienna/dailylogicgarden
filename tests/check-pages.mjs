@@ -36,7 +36,16 @@ for (const url of sitemapUrls) {
   const isLegal = LEGAL.includes(path);
   ok(!isLegal || (!h.includes('adsbygoogle.js') && !h.includes('class="ad"')), 'no ads on legal page ' + path);
   ok(isLegal || h.includes('<script data-ads-loader>'), 'AdSense loader on every indexable non-legal page ' + path);
-  if (path === '/' ) ok(h.includes('adsbygoogle.js') && !h.includes('class="ad"'), 'home: loader but no slots');
+  // since 2026-11-19: one sized placement below the site header on every page with ads (home, overview, puzzles, tools,
+  // guides) and nowhere else; its sizes stand in a <style> element of the page, as AdSense help 9183363 asks
+  const slots = [...h.matchAll(/class="ad" data-slot="([a-z]+)"/g)].map((m) => m[1]);
+  const adPage = r && ['home', 'hub', 'tool', 'guide'].includes(r.kind);
+  ok(adPage ? /<main id="main"><div class="wrap">\n<div class="ad" data-slot="top" hidden>/.test(h) && slots.filter((x) => x === 'top').length === 1 : !slots.length, 'top placement first in main, only on pages with ads ' + path);
+  ok(h.includes('data-ads="' + (adPage ? 'yes' : 'no') + '"') && adPage === /<style>\.dlg_top\{display:block;width:320px;height:100px;/.test(h), 'data-ads and unit sizes ' + path);
+  ok(/height:250px/.test(h) === (!!r && r.kind === 'guide') && /\.dlg_side\{/.test(h) === (!!r && r.kind === 'guide'), '970x250 and 300x600 only on guides ' + path);
+  if (path === '/' || path === '/guides/') ok(h.includes('adsbygoogle.js') && slots.join() === 'top', 'home and overview: loader and the top placement only ' + path);
+  if (r && r.kind === 'tool') ok(slots.join() === 'top,afterplay', 'tool page placements ' + path);
+  if (r && r.kind === 'guide') ok(slots.join() === 'top,lede,mid,side', 'guide placements ' + path);
   if (r && (r.kind === 'tool' || r.kind === 'guide')) {
     ok(h.includes("<script data-ads-loader>if(!window.DLG_NO_GOOGLE){") && h.includes("s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7811071715414905';s.crossOrigin='anonymous'") && h.includes('s.async=true'), 'adsense loader ' + path);
     ok(/<table/.test(h) && /<figure><svg/.test(h), 'table and inline svg ' + path);
@@ -54,6 +63,9 @@ for (const url of sitemapUrls) {
       ok(g > 0 && a > g && /<h2[^>]*>[\s\S]{400,}/.test(h.slice(g, a)), 'first slot after first explanation ' + path);
     } else {
       ok(h.indexOf('data-slot="lede"') > h.indexOf('class="lede"') && h.indexOf('data-slot="mid"') > h.indexOf('data-slot="lede"'), 'guide slots ' + path);
+      // the first rectangle comes after the first section, not right after the introduction; two more sections before the next
+      const l = h.indexOf('data-slot="lede"'), m = h.indexOf('data-slot="mid"');
+      ok(/<h2[\s>]/.test(h.slice(h.indexOf('class="lede"'), l)) && (h.slice(l, m).match(/<h2[\s>]/g) || []).length >= 2, 'guide: first in-text slot after the first section ' + path);
     }
   }
 }
@@ -94,7 +106,7 @@ ok(readFileSync(join(DOCS, 'robots.txt'), 'utf8').includes('Sitemap: https://dai
 ok(readFileSync(join(DOCS, 'CNAME'), 'utf8').trim() === 'dailylogicgarden.com', 'CNAME');
 ok(existsSync(join(DOCS, 'assets/fonts/OFL-Fraunces.txt')) && existsSync(join(DOCS, 'assets/fonts/OFL-Atkinson-Hyperlegible.txt')), 'font licenses');
 // slot IDs are the shared AdSense units of the account
-ok(/afterplay: '7497607759'[\s\S]*lede: '7497607759'[\s\S]*mid: '1292301217'[\s\S]*side: '1292301217'/.test(readFileSync(join(DOCS, 'assets/js/site.js'), 'utf8')), 'ad slot IDs set');
+ok(/afterplay: '7497607759'[\s\S]*lede: '7497607759'[\s\S]*mid: '1292301217'[\s\S]*side: '1292301217'[\s\S]*top: '7497607759'/.test(readFileSync(join(DOCS, 'assets/js/site.js'), 'utf8')), 'ad slot IDs set');
 // page weight: html + css + js + preloaded fonts
 const shared = ['assets/css/site.css', 'assets/js/consent.js', 'assets/js/site.js', 'assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2', 'assets/fonts/fraunces-latin-700-normal.woff2', 'assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2'].reduce((s, f) => s + statSync(join(DOCS, f)).size, 0);
 let heaviest = 0;

@@ -59,7 +59,12 @@ article.prose{max-width:72ch}
   .layout.has-side{display:grid;grid-template-columns:minmax(0,72ch) 320px;gap:56px;justify-content:space-between}
 }
 aside.side{display:none}
-@media (min-width:1200px){aside.side{display:block;padding-top:260px}}
+@media (min-width:1200px){aside.side{display:block;padding-top:8px}}
+aside.side .ad{margin:0}
+/* Side column 300x600: sticky as the AdSense "Ad formats FAQ" (answer 10734935) allows – at most 300 px wide, desktop only
+   (wide window, mouse pointer; never on touch devices), fully visible (window at least 700 px high), moving only vertically
+   inside its column and never over other content. While the statistics window is open it scrolls with the page. */
+@media (min-width:1280px) and (min-height:700px) and (hover:hover) and (pointer:fine){aside.side .ad{position:sticky;top:32px}body.statbox-open aside.side .ad{position:static}}
 table{border-collapse:collapse;width:100%;margin:1em 0 1.4em;font-size:.97rem;background:var(--paper)}
 caption{caption-side:top;text-align:left;font-weight:700;padding:.3em 0;color:var(--moss)}
 th,td{border:1px solid var(--line);padding:.5em .65em;text-align:left;vertical-align:top}
@@ -219,6 +224,10 @@ fieldset label{display:inline-flex;align-items:center;gap:.35rem;margin:.2rem 1r
 .ad{margin:48px 0;text-align:center}
 .ad[hidden]{display:none}
 .ad .ad-label{display:block;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
+/* Top placement, below the site header: the <ins> has its size from the start (sizes in the <style> element of the
+   page), so a delivered ad moves nothing; the label sits in the space above the unit instead of pushing it down. */
+.ad[data-slot="top"]{display:flow-root;position:relative;margin:0}
+.ad[data-slot="top"] .ad-label{position:absolute;top:2px;left:0;right:0;margin:0;line-height:16px}
 /* Ad slots before Google answers: the <ins class="adsbygoogle"> always stays visible and unclipped
    (AdSense help 10762946: don't load ad units as initially hidden). Only the extras – label, min-height,
    border, background, padding, margins – appear once data-ad-status is "filled" or "unfill-optimized".

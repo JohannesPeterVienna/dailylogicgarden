@@ -25,7 +25,7 @@ const CHANGED_0511 = ['/privacy/'];
 // beginners guide merged with the former seniors guide, home with a playable board): review line, dateModified, lastmod.
 const CHANGED_1811 = ['/', '/about/', '/privacy/', '/walkthrough/', '/techniques/', '/guides/', '/archive/', '/printable/', '/flower-beds/', '/garden-path/', '/guides/star-battle-strategy/',
   '/guides/tents-and-trees-rules-strategy/', '/guides/binary-puzzle-rules/', '/guides/solve-logic-grid-puzzles/', '/guides/logic-puzzles-for-beginners/'];
-const modified = (path) => (CHANGED_1811.includes(path) ? '2026-11-18' : CHANGED_0511.includes(path) ? '2026-11-05' : CHANGED_0411.includes(path) ? '2026-11-04' : REVIEWED);
+const modified = (path) => (['/guides/binary-puzzle-rules/', '/sun-and-shade/'].includes(path) ? '2026-11-22' : CHANGED_1811.includes(path) ? '2026-11-18' : CHANGED_0511.includes(path) ? '2026-11-05' : CHANGED_0411.includes(path) ? '2026-11-04' : REVIEWED);
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const strip = (h) => h.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ');
@@ -130,7 +130,7 @@ function faqHtml(faq) {
 function sourcesHtml(src) {
   return `<section class="sources" aria-labelledby="src-h"><h2 id="src-h">Sources and further reading</h2><ul>${src.map((s) => `<li>${s}</li>`).join('')}</ul></section>`;
 }
-const reviewed = (path) => `<p class="reviewed">Reviewed ${modified(path) === '2026-11-18' ? 'November 18, 2026' : REVIEWED_TEXT} &middot; Checked against the puzzle engine described on the <a href="/about/">About &amp; method</a> page.</p>`;
+const reviewed = (path) => `<p class="reviewed">Reviewed ${modified(path) === '2026-11-22' ? 'November 22, 2026' : modified(path) === '2026-11-18' ? 'November 18, 2026' : REVIEWED_TEXT} &middot; Checked against the puzzle engine described on the <a href="/about/">About &amp; method</a> page.</p>`;
 
 // ---------- page builders ----------
 for (const x of [...TOOLS, ...GUIDES]) if (EXTRA[x.path]) x.sections.push(...EXTRA[x.path]);
@@ -169,6 +169,7 @@ ${faqHtml(g.faq)}
 ${sourcesHtml(g.sources)}
 ${reviewed(g.path)}</article><aside class="side" aria-label="Advertisement">${adBox('side')}</aside></div>`;
   addPage({
+    scripts: g.path === '/guides/binary-puzzle-rules/' ? '<script src="/assets/js/row-lab.js" defer></script>' : '',
     path: g.path, title: g.title, description: g.description, body, ads: true, adsense: true, kind: 'guide', minWords: 900, text: g.lede + ' ' + g.sections.join(' ') + g.faq.map((f) => f.join(' ')).join(' '),
     jsonld: [{ '@context': 'https://schema.org', '@type': 'Article', headline: g.h1.replace(/<[^>]+>/g, ''), description: g.description, url: SITE + g.path, datePublished: '2026-11-02', dateModified: modified(g.path), author: { '@type': 'Organization', name: 'Daily Logic Garden', url: SITE + '/about/' }, publisher: PUBLISHER, inLanguage: 'en-US', mainEntityOfPage: SITE + g.path }, breadcrumbLd(list), faqLd(g.faq)]
   });
@@ -212,6 +213,7 @@ write('assets/js/garden.js', `/* Daily Logic Garden – puzzle engine and player
 write('assets/js/walk.js', `/* Daily Logic Garden – walkthrough (built ${V}) */\n` + minify(readFileSync(join(ROOT, 'src/js/walk.js'), 'utf8')));
 write('assets/js/finder.js', `/* Daily Logic Garden – technique finder with the counts of ${Object.values(STATS.data.counts).reduce((a, l) => a + l.length, 0)} boards (built ${V}) */\nwindow.DLG_TECHDATA=${JSON.stringify(finderData(STATS.data))};\n` + minify(readFileSync(join(ROOT, 'src/js/finder.js'), 'utf8')));
 write('assets/js/consent.js', readFileSync(join(ROOT, 'src/js/consent.js'), 'utf8'));
+write('assets/js/row-lab.js', readFileSync(join(ROOT, 'src/js/row-lab.js'), 'utf8'));
 write('assets/js/site.js', readFileSync(join(ROOT, 'src/js/site.js'), 'utf8'));
 write('assets/css/site.css', readFileSync(join(ROOT, 'src/assets/site.css'), 'utf8'));
 write('favicon.svg', LOGO.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace(' aria-hidden="true"', ''));

@@ -210,7 +210,12 @@ export function guides(S) {
       `<h2 id="basic">Pair, sandwich, count</h2>
 <figure>${figBinaryRules()}<figcaption>The three basic moves. Dashed squares show the deduction.</figcaption></figure>
 <p>These three moves are mechanical once you know them: scan every row and column for two equal neighbors, for equal symbols with one gap, and for lines that already have half of one kind. On our 6 × 6 Sprout boards they are all you need.</p>`,
-      `<h2 id="rows">How many valid lines are there?</h2>
+      `<h2 id="row-lab">Which squares are forced?</h2>
+<p>Try a single row before committing to a square on the board. The starting clues show two suns followed by four blanks. The third square must be shade. Does that force the fourth square too? Change a clue to see exactly which completions survive.</p>
+<div id="row-lab-controls">${Array.from({ length: 6 }, (_, i) => `<label>Square ${i + 1} <select aria-label="Square ${i + 1}"><option value="?" ${i > 1 ? 'selected' : ''}>Blank</option><option value="S" ${i < 2 ? 'selected' : ''}>Sun</option><option value="D">Shade</option></select></label>`).join(' ')}
+<p aria-live="polite" id="row-verdict"></p></div>
+<p>Read each line left to right. A deduction here uses only this row. If several completions remain, use the crossing columns on the full board to decide between them.</p>
+<h2 id="rows">How many valid lines are there?</h2>
 <p>Counting valid lines tells you why the puzzle gets harder with size. We counted every line of a given length that has equal counts and no three in a row:</p>
 <div class="tablewrap"><table><caption>Valid lines by length (our own count)</caption>
 <thead><tr><th>Line length</th><th>4</th><th>6</th><th>8</th><th>10</th></tr></thead>

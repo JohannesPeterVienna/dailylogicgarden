@@ -128,7 +128,7 @@ export const TOOLS = [
       `<h2 id="basics">The three basic deductions</h2>
 <figure>${figBinaryRules()}<figcaption>Pair, sandwich and count: the three moves that solve every Sprout board. Dashed squares show what each pattern decides.</figcaption></figure>
 <p><b>Pair:</b> two equal squares side by side force the opposite kind on both ends, because a third would make three in a row. <b>Sandwich:</b> two equal squares with one gap between them force the opposite kind into the gap. <b>Count:</b> once a line has its full quota of one kind, every open square left in it is the other kind.</p>
-<p>These three moves are all a Sprout board needs. Bloom and Grove boards add counting arguments over a whole line, which the <a href="/guides/binary-puzzle-rules/">binary puzzle rules guide</a> explains with real positions from our boards.</p>`,
+<p>Try the <a href="/guides/binary-puzzle-rules/#row-lab">six-square row lab</a> to see which blanks a pair actually fixes. These three moves are all a Sprout board needs. Bloom and Grove boards add counting arguments over a whole line, which the <a href="/guides/binary-puzzle-rules/">binary puzzle rules guide</a> explains with real positions from our boards.</p>`,
       `<h2 id="levels">The three levels</h2>
 <div class="tablewrap"><table><caption>Sun &amp; Shade levels, measured on 60 daily puzzles per level (Nov 2 – Dec 31, 2026)</caption>
 <thead><tr><th>Level</th><th>Board</th><th>Given squares (average)</th><th>New idea at this level</th><th>Logical steps (average)</th></tr></thead>

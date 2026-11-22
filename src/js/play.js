@@ -179,6 +179,35 @@
       '<p>' + core.LEVEL_NAMES[this.level] + ' · ' + fmtTime(this.secs) + (this.hints ? ' · ' + core.plural(this.hints, 'hint') : '') + '. Hints never cost you a plant, and missed days never wilt anything.</p>' +
       '<div class="share-text" aria-label="Result to share">' + txt.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</div>' +
       '<p class="row"><button type="button" class="btn small" data-share>Copy result</button> <a class="btn ghost small" href="/garden/">See my garden</a></p>';
+    if (this.type === 'tents') {
+      var practice = el('p', { 'class': 'row' });
+      var previous = core.addDays(this.key, -1);
+      if (validDate(previous)) {
+        practice.appendChild(el('a', { 'class': 'btn ghost small', href: m.path + '?date=' + previous + '&level=' + this.level }, 'Try the previous day’s board'));
+      }
+      var reminder = el('button', { type: 'button', 'class': 'btn ghost small' }, 'Save tomorrow’s puzzle to my calendar');
+      reminder.addEventListener('click', function () {
+        var day = core.addDays(today(), 1);
+        var stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        var compact = day.replace(/-/g, '');
+        var url = 'https://dailylogicgarden.com/tents-and-trees/?level=' + self.level;
+        var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Daily Logic Garden//Daily puzzle//EN',
+          'BEGIN:VEVENT', 'UID:tents-' + day + '-' + self.level + '@dailylogicgarden.com',
+          'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + compact,
+          'DTEND;VALUE=DATE:' + core.addDays(day, 1).replace(/-/g, ''),
+          'SUMMARY:Tents & Trees - ' + core.LEVEL_NAMES[self.level],
+          'DESCRIPTION:Open the daily board. A new puzzle is available at 00:00 UTC.',
+          'URL:' + url, 'TRANSP:TRANSPARENT', 'END:VEVENT', 'END:VCALENDAR', ''];
+        var blobURL = URL.createObjectURL(new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' }));
+        var download = el('a', { href: blobURL, download: 'tents-and-trees-' + day + '.ics' });
+        document.body.appendChild(download);
+        download.click();
+        download.remove();
+        setTimeout(function () { URL.revokeObjectURL(blobURL); }, 1000);
+      });
+      practice.appendChild(reminder);
+      this.solvedEl.appendChild(practice);
+    }
     this.solvedEl.hidden = false;
     this.solvedEl.querySelector('[data-share]').addEventListener('click', function (ev) {
       var b = ev.currentTarget;

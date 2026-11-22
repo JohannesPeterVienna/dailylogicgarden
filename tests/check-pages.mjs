@@ -42,7 +42,7 @@ for (const url of sitemapUrls) {
     ok(/<table/.test(h) && /<figure><svg/.test(h), 'table and inline svg ' + path);
     // review line, dateModified and sitemap lastmod agree: 2026-11-02, or 2026-11-18 for the pages changed that day
     const lastmod = get(sitemap, new RegExp('<loc>' + url.replace(/[.?]/g, '\\$&') + '</loc><lastmod>([^<]+)</lastmod>'));
-    const revised = ['/guides/binary-puzzle-rules/', '/sun-and-shade/'].includes(path);
+    const revised = ['/guides/binary-puzzle-rules/', '/sun-and-shade/', '/tents-and-trees/'].includes(path);
     const dates = { '2026-11-02': 'November 2, 2026', '2026-11-18': 'November 18, 2026', '2026-11-22': 'November 22, 2026' };
     ok(Object.hasOwn(dates, lastmod) && (lastmod === '2026-11-22') === revised && h.includes('Reviewed ' + dates[lastmod]), 'reviewed line ' + path);
     ok(h.includes('"@type":"FAQPage"') && h.includes('"@type":"BreadcrumbList"') && h.includes('"dateModified":"' + lastmod + '"'), 'json-ld ' + path);

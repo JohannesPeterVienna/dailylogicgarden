@@ -96,7 +96,8 @@ export const TOOLS = [
 <li><b>Work line by line when you are stuck.</b> For each row, ask: how many tents are still missing, and in how many separate gaps could they go? A gap of three open squares can take at most two tents, a gap of one or two squares at most one.</li>
 <li><b>Watch the corners of tents.</b> A new tent removes up to eight squares, often from two different rows and columns at once. Re-check those lines immediately.</li>
 <li><b>Use the dots.</b> With &ldquo;Show blocked squares&rdquo; on, the board marks every square around your tents. You can switch this off if you prefer to do it by hand.</li></ul>
-<p>When you finish, the page plants a small fir in <a href="/garden/">your garden</a> and gives you a result line you can share – the level, the date, your time and the number of hints, without revealing a single tent.</p>`
+<p>When you finish, the page plants a small fir in <a href="/garden/">your garden</a> and gives you a result line you can share – the level, the date, your time and the number of hints, without revealing a single tent.</p>
+<p>For a second round, open the previous day’s campsite at the same difficulty from the solved board. To come back tomorrow, download the one-day calendar entry. It opens the daily puzzle at your level. New boards arrive at midnight UTC.</p>`
     ],
     faq: [
       ['Can a tent touch its own tree diagonally?', 'No. A tent must be directly above, below, left or right of its tree. Diagonal neighbors do not count as a pair, although a tent may of course stand diagonally next to some other tree.'],

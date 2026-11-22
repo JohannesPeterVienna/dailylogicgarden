@@ -25,7 +25,7 @@ const CHANGED_0511 = ['/privacy/'];
 // beginners guide merged with the former seniors guide, home with a playable board): review line, dateModified, lastmod.
 const CHANGED_1811 = ['/', '/about/', '/privacy/', '/walkthrough/', '/techniques/', '/guides/', '/archive/', '/printable/', '/flower-beds/', '/garden-path/', '/guides/star-battle-strategy/',
   '/guides/tents-and-trees-rules-strategy/', '/guides/binary-puzzle-rules/', '/guides/solve-logic-grid-puzzles/', '/guides/logic-puzzles-for-beginners/'];
-const modified = (path) => (['/guides/binary-puzzle-rules/', '/sun-and-shade/'].includes(path) ? '2026-11-22' : CHANGED_1811.includes(path) ? '2026-11-18' : CHANGED_0511.includes(path) ? '2026-11-05' : CHANGED_0411.includes(path) ? '2026-11-04' : REVIEWED);
+const modified = (path) => (['/guides/binary-puzzle-rules/', '/sun-and-shade/', '/tents-and-trees/'].includes(path) ? '2026-11-22' : CHANGED_1811.includes(path) ? '2026-11-18' : CHANGED_0511.includes(path) ? '2026-11-05' : CHANGED_0411.includes(path) ? '2026-11-04' : REVIEWED);
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const strip = (h) => h.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ');

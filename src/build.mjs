@@ -10,6 +10,8 @@ import { home, STATIC, guidesHub, gardenPage, notFound } from './content/static.
 import { techstats, summarize } from './techstats.mjs';
 import { referencePages, finderData } from './content/reference.mjs';
 
+const shopLink = readFileSync(new URL('./shop-link.html', import.meta.url), 'utf8');
+
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT = join(ROOT, 'docs');
 const SITE = 'https://dailylogicgarden.com';
@@ -66,7 +68,7 @@ function footer() {
 <div><h2>Play</h2><ul><li><a href="/flower-beds/">Flower Beds</a></li><li><a href="/tents-and-trees/">Tents &amp; Trees</a></li><li><a href="/sun-and-shade/">Sun &amp; Shade</a></li><li><a href="/garden-path/">Garden Path</a></li><li><a href="/who-planted-what/">Who Planted What</a></li></ul></div>
 <div><h2>More</h2><ul><li><a href="/walkthrough/">Step-by-step walkthrough</a></li><li><a href="/techniques/">Technique reference</a></li><li><a href="/archive/">Archive</a></li><li><a href="/printable/">Printable packs</a></li><li><a href="/guides/">Guides</a></li><li><a href="/garden/">My garden</a></li></ul></div>
 <div><h2>About</h2><ul><li><a href="/about/">About &amp; method</a></li><li><a href="/contact/">Contact</a></li><li><a href="/imprint/">Imprint</a></li><li><a href="/privacy/">Privacy policy</a></li><li><button type="button" class="linklike" data-privacy-settings>Privacy settings</button></li></ul></div>
-</div><p class="fine">Daily Logic Garden is published by AdStern, Vienna. Every puzzle is made by our own generator and checked for exactly one solution. Your progress stays in your browser.</p></div></footer>`;
+</div><p class="fine">Daily Logic Garden is published by AdStern, Vienna. Every puzzle is made by our own generator and checked for exactly one solution. Your progress stays in your browser.</p>${shopLink}</div></footer>`;
 }
 function crumbs(list) {
   return `<nav class="crumbs" aria-label="Breadcrumb"><ol>${list.map(([t, h], i) => `<li>${i === list.length - 1 ? `<span aria-current="page">${esc(t)}</span>` : `<a href="${h}">${esc(t)}</a>`}</li>`).join('')}</ol></nav>`;

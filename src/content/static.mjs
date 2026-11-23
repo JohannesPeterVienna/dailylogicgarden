@@ -134,17 +134,27 @@ export const STATIC = [
     title: 'Imprint – Daily Logic Garden (Legal Notice, AdStern)',
     description: 'Legal notice for dailylogicgarden.com under the Austrian E-Commerce Act and Media Act: publisher, contact, business details, trade authority and chamber.',
     html: legal('Legal notice', 'Imprint', `<p>Information according to § 5 of the Austrian E-Commerce Act (ECG) and disclosure according to § 25 of the Austrian Media Act (MedienG).</p>
-<h2 id="owner">Media owner and publisher</h2>
-<p>AdStern – Agentur für digitales Marketing<br>Seilerstätte 8<br>1010 Wien<br>Österreich</p>
-<p>Email: <a href="mailto:office@adstern.com">office@adstern.com</a></p>
-<h2 id="business">Business details</h2>
-<ul><li>Business activity: advertising agency</li>
-<li>VAT ID: ATU54682507</li>
-<li>Competent trade authority: Magistratisches Bezirksamt für den 1./8. Bezirk, Vienna</li>
-<li>Member of the Vienna Economic Chamber (WKO Wien), Fachgruppe Werbung und Marktkommunikation</li>
-<li>Applicable trade law: Gewerbeordnung 1994, available in the <a href="${RIS}" rel="noopener">Austrian legal information system (RIS)</a></li></ul>
-<h2 id="line">Editorial line (§ 25 MedienG)</h2>
-<p>Daily Logic Garden publishes free daily logic puzzles and guides on how to solve them, for entertainment and practice.</p>
+<h2 id="owner">Media owner and service provider</h2>
+<p><strong>AdStern – Agentur für digitales Marketing</strong><br>Johannes Peter<br>Seilerstätte 8<br>1010 Wien<br>Austria</p>
+<p><a href="mailto:office@adstern.com">office@adstern.com</a></p>
+<h2 id="business">Business details</h2><dl><dt><strong>Business activity</strong></dt><dd>Advertising agency</dd>
+<dt><strong>VAT identification number</strong></dt><dd>ATU54682507</dd>
+<dt><strong>Austrian trade register number (GISA)</strong></dt><dd>31741743</dd>
+<dt><strong>Registered trade location</strong></dt><dd>Seilerstätte 8, 1010 Wien</dd>
+<dt><strong>Membership</strong></dt><dd>Member of the Fachgruppe Werbung und Marktkommunikation (Advertising and Market Communication trade group)</dd>
+<dt><strong>Supervisory and trade authority</strong></dt><dd><a href="https://www.wien.gv.at/kontakt/mba0108">Magistratisches Bezirksamt für den 1. und 8. Bezirk, Wien</a></dd>
+<dt><strong>Applicable trade regulation</strong></dt><dd><a href="https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&amp;Gesetzesnummer=10007517">Austrian Trade Regulation Act (Gewerbeordnung 1994, RIS)</a></dd></dl>
+<h2 id="line">Editorial policy (§ 25 Austrian Media Act, Mediengesetz)</h2><p>Daily Logic Garden publishes daily logic puzzles and explains the reasoning behind their solutions.</p>
+<h2>Contact form</h2>
+<form action="https://www.viennabyalocal.com/kontakt.php" method="post" accept-charset="UTF-8" aria-label="Contact form" style="display:grid;gap:.85rem;max-width:34rem">
+ <input type="hidden" name="site" value="dailylogicgarden.com"><input type="hidden" name="language" value="en">
+ <div hidden aria-hidden="true"><label>Website URL <input name="company_url" tabindex="-1" autocomplete="off"></label></div>
+ <label style="display:grid;gap:.25rem">Name (optional)<input name="sender_name" autocomplete="name" type="text" maxlength="120" style="font:inherit;width:100%;box-sizing:border-box;padding:.55em"></label>
+ <label style="display:grid;gap:.25rem">Your email address (required)<input name="email" autocomplete="email" type="email" required maxlength="254" style="font:inherit;width:100%;box-sizing:border-box;padding:.55em"></label>
+ <label style="display:grid;gap:.25rem">Your message (required)<textarea name="message" rows="5" required maxlength="6000" style="font:inherit;width:100%;box-sizing:border-box;padding:.55em"></textarea></label>
+ <p>AdStern uses your details to respond to your enquiry. <a href="/privacy/">Privacy policy</a></p>
+ <button type="submit" style="justify-self:start;padding:.65em 1.2em;font:inherit">Send message</button>
+</form>
 <h2 id="links">Links to other websites</h2>
 <p>We checked linked pages when we added or reviewed them. Their content is the responsibility of their operators.</p>`)
   },
@@ -154,7 +164,8 @@ export const STATIC = [
     description: 'How dailylogicgarden.com processes data: GitHub Pages hosting, Google AdSense with consent, Analytics after consent, progress kept in your browser, your rights.',
     html: legal('Privacy', 'Privacy policy', `<p>This policy explains what data is processed when you visit dailylogicgarden.com, why, on which legal basis, and which rights you have.</p>
 <h2 id="controller">Controller</h2>
-<p>AdStern – Agentur für digitales Marketing, Seilerstätte 8/8, 1010 Wien, Österreich, <a href="mailto:office@adstern.com">office@adstern.com</a>. More details are in the <a href="/imprint/">imprint</a>.</p>
+<p>AdStern – Agentur für digitales Marketing, Seilerstätte 8, 1010 Wien, Österreich, <a href="mailto:office@adstern.com">office@adstern.com</a>. More details are in the <a href="/imprint/">imprint</a>.</p>
+<h3>Contact form</h3><p>When you submit the form in the legal notice, your email address, message, optional name and the name of the referring website are sent to office@adstern.com through AdStern’s World4You hosting. AdStern uses these details to answer your enquiry. To limit automated submissions, the server counts requests per pseudonymous IP identifier over a 15-minute window.</p>
 <h2 id="hosting">Hosting on GitHub Pages</h2>
 <p>The site is a collection of static files served by GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. To deliver a page, GitHub necessarily receives technical data from your browser, such as your IP address, the requested address, date and time, browser type and the referring page, and may store it in server logs for a limited time for security purposes. Legal basis: our legitimate interest in delivering a secure website (Art. 6(1)(f) GDPR). Data transfers to the USA are based on the EU–U.S. Data Privacy Framework or standard contractual clauses. See the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub General Privacy Statement</a>.</p>
 <h2 id="local">Puzzle progress in your browser</h2>
@@ -177,7 +188,7 @@ export const STATIC = [
 <h2 id="email">Email</h2>
 <p>If you write to us, we use your address and message only to answer and delete them when they are no longer needed, unless legal retention periods apply (Art. 6(1)(b) and (f) GDPR).</p>
 <h2 id="rights">Your rights</h2>
-<p>You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction (Art. 18), data portability (Art. 20) and objection (Art. 21). You can withdraw consent at any time with effect for the future. As we do not store personal data about visitors ourselves, most requests concern Google, whose controls are available at <a href="https://myaccount.google.com/data-and-privacy" rel="noopener">myaccount.google.com</a>.</p>
+<p>You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction (Art. 18), data portability (Art. 20) and objection (Art. 21). You can withdraw consent at any time with effect for the future. For requests about Google services, you can also contact Google, whose controls are available at <a href="https://myaccount.google.com/data-and-privacy" rel="noopener">myaccount.google.com</a>.</p>
 <p>You have the right to lodge a complaint with a supervisory authority. In Austria this is the Datenschutzbehörde, Barichgasse 40–42, 1030 Vienna, <a href="mailto:dsb@dsb.gv.at">dsb@dsb.gv.at</a>, <a href="https://www.dsb.gv.at/" rel="noopener">www.dsb.gv.at</a>; you can also contact the authority in your country of residence.</p>
 <h2 id="us">Notice for U.S. residents</h2>
 <p>Under some U.S. state privacy laws, such as the California Consumer Privacy Act as amended by the CPRA, the use of advertising cookies for cross-context behavioral advertising can count as &ldquo;selling&rdquo; or &ldquo;sharing&rdquo; personal information. Where these laws apply, Google&rsquo;s consent message offers an opt-out, which you can reopen via &ldquo;Privacy settings&rdquo;. We do not sell personal information in any other way and do not knowingly collect personal information from children under 16.</p>
